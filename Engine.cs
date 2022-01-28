@@ -26,10 +26,10 @@ namespace MTG_ConsoleEngine
             Console.WriteLine("Start Game Loop");
             Console.WriteLine("Draw Hand");
             for(int i = 0;i<7;i++)
-            {
                Players[0].DrawCard();
+
+            for(int i = 0;i<7;i++)
                Players[1].DrawCard();
-            }
 
             int currentPlayerId = 0;
             // debug put creatures in field -------------
@@ -42,6 +42,9 @@ namespace MTG_ConsoleEngine
             // ------------------------------------------
             while(true)
             {
+                Players[0].DisplayPlayerHand();
+                Players[1].DisplayPlayerHand();
+
                 foreach(var Phase in GamePhases)
                 {
                     Phase(Players[currentPlayerId]);
@@ -74,14 +77,19 @@ namespace MTG_ConsoleEngine
             DeclaredAttackers = _player.SelectAttackers();
 
             Console.WriteLine(" - Declare Blockers Step");  // drugi gracz
-            DeclaredDeffenders = Players[_player.ID==1?1:0].SelectDeffenders();
+            if(DeclaredAttackers.Count > 0)
+            {
+                DeclaredDeffenders = Players[_player.ID==1?1:0].SelectDeffenders();
+            }
             Console.ResetColor();
             Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {_player.ID}");
             Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {Players[_player.ID==1?1:0].ID}");
             Console.WriteLine(" - Combat Damage Step");
             
             ExecuteCombat();
-            
+            DeclaredAttackers.Clear();
+            DeclaredDeffenders.Clear();
+
             Console.WriteLine(" - End of Combat Step");
         }
 

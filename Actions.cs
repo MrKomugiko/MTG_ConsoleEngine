@@ -1,3 +1,5 @@
+using MTG_ConsoleEngine.Card_Category;
+
 namespace MTG_ConsoleEngine
 {
     public class Actions{
@@ -7,11 +9,22 @@ namespace MTG_ConsoleEngine
             Engine.Players[firstTarget].DealDamage(value);
             cardOwner.DealDamage(value);
         }
-        
         public static void AddMana(int value, string colorCode, Player owner)
         {
-            Console.WriteLine("adding mana:" + value + " "+colorCode);
+            Console.WriteLine("dodano karte many do puli ManaField`u");
+            // TODO: mozna by cos z tym zrobic 
+        }
+        public static void Haste(Creature creatureCard)
+        {
+            // karta jest aktywna orazu po wprowadzeniu jej na pole / mozna nią odrazu atakowac lub uzyc umiejetnosci
+            Console.WriteLine("Karta lądując na polu staje sie aktywna ( Untapped )");
+            creatureCard.isTapped = false;
+        }
+        public static void Lifelink(int value, Player owner)
+        {
+            // leczenie po zadaniu obrażeń 
+            Console.WriteLine($"Leczysz sie za {value}.");
+            owner.Heal(value);
         }
     }
-
 }

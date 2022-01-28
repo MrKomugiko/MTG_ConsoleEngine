@@ -5,8 +5,8 @@ namespace MTG_ConsoleEngine.Card_Category
         public bool isTapped { 
             get => _isTapped; 
             set {
-                _isTapped = value;
                 Console.WriteLine($"Karta {Name} została tapnięta.");
+                _isTapped = value;
             }
         }
         List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
@@ -46,25 +46,21 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override void UseSpecialAction(ActionType trigger)
         {
-            if (CardSpecialActions.FirstOrDefault().action != null)
+            if (CardSpecialActions.Count == 0) return;
+
+            var specialAction = CardSpecialActions.Where(x=>x.trigger == trigger);
+            if(specialAction == null) return;
+
+            foreach(var action in specialAction)
             {
                 Console.WriteLine("Aktywowano: " + CardSpecialActions.FirstOrDefault().description);
-                if(CardSpecialActions.FirstOrDefault().trigger == trigger)
-                {
-                    CardSpecialActions.FirstOrDefault().action();
-                    isTapped = false;
-                }
-                else
-                {
+                CardSpecialActions.FirstOrDefault().action();
+            }
+        }
 
-                    isTapped = true;
-                }
-            }
-            else
-            {
-                Console.WriteLine("Brak efektu dodatkowego.");
-            }
+        public override void Print() 
+        {
+            Console.WriteLine($"Name:{Name.PadLeft(30)} | Cost:{ManaCostString.PadLeft(10)} | ");
         }
     }
 }
-

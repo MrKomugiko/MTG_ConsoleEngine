@@ -11,21 +11,14 @@ namespace MTG_ConsoleEngine.Card_Category
             get => _isTapped; 
             set {
                 _isTapped = value;
-                Console.WriteLine($"Karta {Name} została tapnięta.");
+                if(value == true)
+                    Console.WriteLine($"Karta {Name} została tapnięta.");
             }
         }
 
 
-        List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
+        public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
         private bool _isTapped;
-        internal string getmanastring { get {
-            string manaCostFormated = "";
-            foreach(KeyValuePair<string,int> mana in ManaCost )
-            {
-                manaCostFormated += $"{mana.Key}{mana.Value} ";
-            }            
-            return manaCostFormated;
-        }}
         public Creature(Dictionary<string, int> _manaCost, string _identificator, 
             string _name, string _category, string _description, int _health, int _attack)
             : base(_manaCost, _identificator, _name, _description, "Creature")
@@ -38,10 +31,11 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override void AddSpecialAction(string _specialActionInfo)
         {
-            if(_specialActionInfo.Contains("Whenever") && _specialActionInfo.Contains("attacks, each opponent loses") && _specialActionInfo.Contains("life."))
+            _specialActionInfo = _specialActionInfo.ToLower();
+            if(_specialActionInfo.Contains("whenever") && _specialActionInfo.Contains("attacks, each opponent loses") && _specialActionInfo.Contains("life."))
             {
-                int value = Int32.Parse(_specialActionInfo.Replace(this.Name, "")
-                        .Replace("Whenever  attacks, each opponent loses", "")
+                int value = Int32.Parse(_specialActionInfo.Replace(this.Name.ToLower(), "")
+                        .Replace("whenever  attacks, each opponent loses", "")
                         .Replace("life.", "").Trim());
 
                 CardSpecialActions.Add
@@ -53,18 +47,47 @@ namespace MTG_ConsoleEngine.Card_Category
                     )
                 );
             }          
+            if(_specialActionInfo.Contains("lifelink"))
+            {
+                int value = CurrentAttack;
+                CardSpecialActions.Add
+                (
+                    (
+                        trigger: ActionType.Attack,
+                        description: "Lifelink",
+                        action: () => Actions.Lifelink(value, Owner)
+                    )
+                );
+            }
+            if(_specialActionInfo.Contains("haste"))
+            {
+                int value = CurrentAttack;
+                CardSpecialActions.Add
+                (
+                    (
+                        trigger: ActionType.Play,
+                        description: "Haste",
+                        action: () => Actions.Haste(this)
+                    )
+                );
+            }
         }
         public override void UseSpecialAction(ActionType actionType)
         {
             if(CardSpecialActions.Count > 0)
             {
                 Console.WriteLine("Action/s Triggered!");
-                foreach(var actions in CardSpecialActions.Where(x=>x.trigger == ActionType.Attack))
+                foreach(var actions in CardSpecialActions.Where(x=>x.trigger == actionType))
                 {   
                     actions.action();
                 }
             }
         }
+        public override void Print() {
+        {
+            Console.WriteLine($"Name:{Name.PadLeft(30)} | Cost:{ManaCostString.Trim().PadLeft(10)} | atk:{CurrentAttack.ToString().PadLeft(2)} / hp:{CurrentHealth.ToString().PadLeft(2)}");
+        }
+    }
         public void Attack(Creature? defender)
         {   
             if(CurrentHealth <= 0) return;

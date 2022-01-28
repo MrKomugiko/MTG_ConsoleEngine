@@ -11,6 +11,8 @@ namespace MTG_ConsoleEngine
         public Dictionary<string,int> ManaCost = new();
         public Player Owner {get;set;} = new();
 
+        public string ManaCostString = "free";
+
         protected CardBase(Dictionary<string,int> _manaCost, string _identificator, 
             string _name, string _description, string _cardType)
         {
@@ -19,15 +21,26 @@ namespace MTG_ConsoleEngine
             Description = _description;
             CardType = _cardType;
             ManaCost = _manaCost;
+  
+            if(_manaCost.Keys.Count != 0 )
+            {
+                ManaCostString = "";
+                foreach(KeyValuePair<string,int> mana in _manaCost )
+                {
+                    ManaCostString += $"{mana.Key}{mana.Value} ";
+                }          
+            }
         }
 
         public abstract void UseSpecialAction(ActionType trigger);
         public abstract void AddSpecialAction(string _specialActionInfo);
+        public abstract void Print();
 
         public object Clone()
         {
             return this.MemberwiseClone();
         }
+
     }
 }
 
