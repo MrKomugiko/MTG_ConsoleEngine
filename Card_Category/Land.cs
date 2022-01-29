@@ -64,7 +64,7 @@ namespace MTG_ConsoleEngine.Card_Category
 
         public override string GetCardString() 
         {
-            return $"| Name:{Name.PadLeft(30)} | Cost:{ManaCostString.PadLeft(10)} | ";
+            return $"[{this.GetType().Name.PadLeft(12)} ] {base.GetCardString()} |";
         }
 
         internal override (bool result, List<CardBase> landsToTap) CheckAvailability()

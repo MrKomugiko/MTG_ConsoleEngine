@@ -40,9 +40,6 @@ namespace MTG_ConsoleEngine
             CurrentPlayerIndex = 0;
             while(true)
             {
-                Players[0].DisplayPlayerHand();
-                Players[1].DisplayPlayerHand();
-
                 foreach(var Phase in GamePhases)
                 {
                     Phase(Players[CurrentPlayerIndex]);
@@ -82,12 +79,18 @@ namespace MTG_ConsoleEngine
                 
                 var input = Console.ReadLine()??"";
                 if(String.IsNullOrEmpty(input)) break;
+                
+                int choosenIndex;
+                if(Int32.TryParse(input, out choosenIndex) == false) 
+                {
+                    continue;
+                }
                 if(handdata[Int32.Parse(input)].result == false)
                 {
                     Console.WriteLine("nie mozesz zagrać tej karty i/lub nie stac cie");
                     continue;
                 }
-
+                
                 _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
             }
         }
@@ -128,16 +131,16 @@ namespace MTG_ConsoleEngine
                     foreach(var defender in DeclaredDeffenders.Where(x=>x.Value == attacker))
                     {
                         // if(attacker.CurrentHealth <=0) 
-                        //     break;
+                        //     break
 
                         defendersHpBeforeCombat.Add(attacker.CurrentHealth);
                         Console.WriteLine($"Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
 
                         attacker.Attack(defender.Key);
                     }
-                    Console.WriteLine("---- wynik potyczki ----");
+                    // Console.WriteLine("---- wynik potyczki ----");
 
-                    Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
+                    //Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
                     int index = 0;
                     foreach(var defender in DeclaredDeffenders.Where(x=>x.Value == attacker))
                     {
@@ -163,8 +166,16 @@ namespace MTG_ConsoleEngine
             Console.WriteLine(" - End of turn step");
             Console.WriteLine(" - Cleanup step");
             _player.IsLandPlayedThisTurn = false;
+            Console.WriteLine($"---- Player {_player.ID} : Combat Zone ----");
             MoveDeadCreaturesToGraveyard(_player);
-            MoveDeadCreaturesToGraveyard(Players[_player.ID==1?0:1]);
+
+            Console.WriteLine();
+
+            Console.WriteLine($"---- Player {Players[_player.ID==1?1:0].ID} : Combat Zone ----");
+            _player.DisplayPlayerField();
+            MoveDeadCreaturesToGraveyard(Players[_player.ID==1?1:0]);
+            Players[_player.ID==1?1:0].DisplayPlayerField();
+
         }
 
         private static void MoveDeadCreaturesToGraveyard(Player _player)

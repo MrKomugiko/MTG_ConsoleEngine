@@ -115,7 +115,6 @@ namespace MTG_ConsoleEngine
         {
             Console.ForegroundColor = color;
             Console.WriteLine($"Gracz 1 zagrywa kartą {card.Name}");
-            Hand.Remove(card);
             switch(card)
             {
                 case Creature c:  
@@ -131,18 +130,85 @@ namespace MTG_ConsoleEngine
                     ManaField.Add(card);
                     card.UseSpecialAction(ActionType.Play);
                     break;
+
+                case Enchantment e:
+                    if(e.UseOn == "Creature")   
+                    {
+                        bool isActionValid = false;
+                        Console.WriteLine("karta typu enchantment: wybierz kreaturke z pola na ktora chcesz ją nałożyc\n\t(np. 1-0 czyli karta przeciwnika z indexem 0)");
+                        Console.WriteLine("[0] => Your Combat field Cards:");
+                        this.DisplayPlayerField();
+                        Console.WriteLine("[1] => Enemies Combat field Cards:");
+                        Engine.Players[ID==1?1:0].DisplayPlayerField();                
+                        int choosenIndexField = -1;
+                        int choosenIndexCreature = -1;
+                        while(true)
+                        {
+                            var input = Console.ReadLine()??"";
+                            var inputarr = input.Split("-");
+                            if(String.IsNullOrEmpty(input)) continue;
+                            if(inputarr.Length<2) 
+                            {
+                                Console.WriteLine("niepoprawny/nie pełny format : <side combat land number> - <index of monster from this area> ex. 1-0");
+                                continue;
+                            }
+                            if(Int32.TryParse(inputarr[0], out choosenIndexField) == false) 
+                            {
+                                Console.WriteLine("wprowadz poprawny numer strony 0 lub 1, sprobuj ponownie");
+                                continue;
+                            }
+                            if(choosenIndexField > 1  || choosenIndexField < 0) 
+                            {
+                                Console.WriteLine("niepoprawny numer strony, wprowadz 0 dla swojej czesci lub 1 dla przeciwnika, spróbuj ponownie");
+                                continue;   
+                            }
+                            if(Int32.TryParse(inputarr[1], out choosenIndexCreature) == false) 
+                            {
+                                Console.WriteLine("niepoprawny index karty z pola, sprobuj ponownie");
+                                continue;
+                            }
+                            if(choosenIndexCreature > 0  || choosenIndexCreature >= Engine.Players[choosenIndexField].CombatField.Count) 
+                            {
+                                Console.WriteLine($"niepoprawny numer karty przeciwnika, podaj wartosc od 0 do {Engine.Players[choosenIndexField].CombatField.Count-1}, spróbuj ponownie");
+                                continue;   
+                            }
+
+                            isActionValid = true;
+                            break;
+                        }
+                        if(isActionValid)
+                        {
+                            e.AssingToCreature((Creature)(Engine.Players[choosenIndexField].CombatField[choosenIndexCreature]));
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Użycie Enchantmenta na postaci");
+                        throw new NotImplementedException();
+                    }
+                    break;
             }
+
+            Hand.Remove(card);
             landToPayCost.ForEach(land=>((Land)land).isTapped = true);
             Console.ResetColor();
         }
         public void DisplayPlayerField()
         {
             Console.ForegroundColor = color;
+            if(CombatField.Count == 0)
+            {
+                Console.WriteLine("brak wystawionych kart na polu");
+                Console.ResetColor();
+                return;
+            }
+
             foreach (Creature creature in CombatField.Where(c => (c is Creature) && ((Creature)c).isTapped == false))
                 Console.WriteLine($"[{CombatField.IndexOf(creature)}] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth}) <Mana:{creature.ManaCostString}>");
            
             foreach (Creature creature in CombatField.Where(c => (c is Creature) && ((Creature)c).isTapped))
                 Console.WriteLine($"[ TAPPED ] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth}) <Mana:{creature.ManaCostString}>");
+
             Console.ResetColor();
         }
         public Dictionary<int,(bool result,List<CardBase> landsToTap)> DisplayPlayerHand()

@@ -27,5 +27,16 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"Leczysz sie za {value}.");
             owner.Heal(value);
         }
+        public static void AssingExtraValuesToCreature(int hp, int atk, Creature? target)
+        {
+            if(target != null)
+            {
+            // max wartość któą odzyskaja w nowej turze:
+                target.BaseAttack += atk;
+                target.BaseHealth += hp;
+                
+                Console.WriteLine($"{target.Name} po nałożeniu enchantu: atk:{target.CurrentAttack} / hp:{target.CurrentHealth}");
+            }
+        }
     }
 }

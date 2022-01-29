@@ -106,4 +106,37 @@ namespace MTG_ConsoleEngine
             return land;
         }
     }
+    public class Enchantment_Factory
+    {
+        public Enchantment Get_DeadWeight()
+        {
+            var enchantment = new Enchantment
+            (
+                _manaCost: new Dictionary<string, int>() {{ "B", 1 } },
+                _identificator: "067_GRN",
+                _name: "Dead Weight",
+                _category: "Aura",
+                _description: "All things considered, his first day on patrol could have gone better"
+            );
+             enchantment.AddSpecialAction($"Enchant creature");
+             enchantment.AddSpecialAction($"Enchanted creature gets -2/-2.");
+             return enchantment;
+        }
+        public Enchantment Get_InfernalScarring()
+        {
+            var enchantment = new Enchantment
+            (
+                _manaCost: new Dictionary<string, int>() { { "",1 },{ "B",1 } },
+                _identificator: "105_M21",
+                _name: "Infernal Scarring",
+                _category: "Aura",
+                _description: "One who is marked by demon in life is sure to be rembered as one in death."
+            );
+            
+             enchantment.AddSpecialAction($"Enchant creature");
+             enchantment.AddSpecialAction($"Enchanted creature gets +2/+0 and has \"When this creature dies, draw a card.\"");
+
+             return enchantment;
+        }
+    }
 }
