@@ -30,6 +30,11 @@ Player2.AddToDeck(_CF.Get_WalkingCorpse());
 Player2.AddToDeck(_CF.Get_Banehound());
 Player2.AddToDeck(_CF.Get_Banehound());
 
+Player1.ManaField.Add(_LF.Get_Swamp());
+Player1.ManaField.Add(_LF.Get_Mountain());
+
+Player2.ManaField.Add(_LF.Get_Mountain());
+
 Game.Start();
 
 Console.ReadLine();

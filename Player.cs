@@ -12,6 +12,8 @@ namespace MTG_ConsoleEngine
         public List<CardBase> Deck { get; private set; } = new();
         public List<CardBase> Graveyard { get; private set; } = new();
         public List<CardBase> Exiled { get; private set; } = new();
+        public bool IsLandPlayedThisTurn { get; internal set; }
+
         public readonly ConsoleColor color;
         
         public Player(){}
@@ -149,7 +151,10 @@ namespace MTG_ConsoleEngine
         {
             Console.ForegroundColor = color;
             Console.WriteLine($"Player {ID} Hand:");
-            Hand.ForEach(card=>card.Print());
+            for(int index = 0;index < Hand.Count; index++)
+            {
+                Console.WriteLine($"[{Hand[index].CheckAvailability().ToString().PadLeft(5)}] [{index}] {Hand[index].GetCardString()}");
+            }
             Console.ResetColor();
         }
     }

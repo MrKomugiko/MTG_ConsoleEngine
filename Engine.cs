@@ -7,9 +7,11 @@ namespace MTG_ConsoleEngine
         private delegate void Phase(Player _player);
         private List<Phase> GamePhases = new List<Phase>();
         public static Player[] Players = new Player[2];
-        public PhaseType CurrentPhase { get; private set; }
+        public static PhaseType CurrentPhase { get; private set; }
         public static List<Creature> DeclaredAttackers = new();
         public static Dictionary<Creature,Creature> DeclaredDeffenders = new(); // <obrońca / atakujacy> , bo mozna blokowac kilkoma stworkami
+        public static int TurnCounter = 0;
+        public static int CurrentPlayerIndex = 0;
         public Engine(Player FirstPlayer, Player SecondPlayer)
         {
             GamePhases.Add(Beginning_Phase);
@@ -24,22 +26,18 @@ namespace MTG_ConsoleEngine
         public void Start()
         {
             Console.WriteLine("Start Game Loop");
-            Console.WriteLine("Draw Hand");
+            Console.WriteLine("Draw 7 card Hand");
+            
             for(int i = 0;i<7;i++)
                Players[0].DrawCard();
+               
 
             for(int i = 0;i<7;i++)
                Players[1].DrawCard();
+               
 
-            int currentPlayerId = 0;
-            // debug put creatures in field -------------
-            Players[0].PlayCardFromHand(Players[0].Hand[0]);
-            Players[0].PlayCardFromHand(Players[0].Hand[0]);
-            Players[0].PlayCardFromHand(Players[0].Hand[0]);
-
-            Players[1].PlayCardFromHand(Players[1].Hand[0]);
-            Players[1].PlayCardFromHand(Players[1].Hand[0]);
-            // ------------------------------------------
+            TurnCounter = 0;
+            CurrentPlayerIndex = 0;
             while(true)
             {
                 Players[0].DisplayPlayerHand();
@@ -47,26 +45,45 @@ namespace MTG_ConsoleEngine
 
                 foreach(var Phase in GamePhases)
                 {
-                    Phase(Players[currentPlayerId]);
+                    Phase(Players[CurrentPlayerIndex]);
                 }
-                currentPlayerId = currentPlayerId==0?1:0;
-                Console.ReadLine();
-            };
 
-           // Console.WriteLine("End Game Loop");
+                CurrentPlayerIndex = CurrentPlayerIndex==0?1:0;
+                TurnCounter++;
+            };
         }
         public void Beginning_Phase(Player _player)
         {   
             CurrentPhase = PhaseType.Beginning_Phase;
             Console.WriteLine("Beginning_Phase: Player "+_player.ID);
-            Console.WriteLine(" - Untap Step");
-            Console.WriteLine(" - Upkeep Step");
-            Console.WriteLine(" - Draw step");
+            Console.WriteLine(" - Untap Step [ DONE ]");
+            _player.CombatField.ForEach(card => card.isTapped = false);
+            _player.ManaField.ForEach(card => card.isTapped = false);
+
+            Console.WriteLine(" - Upkeep Step [Work In Progress]");
+            Console.WriteLine("\t odpalenie akcji wykonujacych sie na początku tury gracza");
+            Console.WriteLine(" - Draw step [ DONE ]");
+            if(TurnCounter >= 2)
+            {
+                _player.DrawCard();
+            }
         }
         public void First_Main_Phase(Player _player)
         {
             CurrentPhase = PhaseType.First_Main_Phase;
             Console.WriteLine("First_Main_Phase: Player "+_player.ID);
+            Console.WriteLine("\t Cast spells, instants, play enchantments, play creatures");
+            _player.DisplayPlayerHand();
+            Console.WriteLine("enter card index to play with / type 'skip' to skip ");
+            while(true)
+            {
+                var input = Console.ReadLine()??"";
+                
+                if(String.IsNullOrEmpty(input)) break;
+
+                _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)]);
+                _player.DisplayPlayerHand();
+            }
         }
         public void Combat_Phase(Player _player)
         {
@@ -136,9 +153,22 @@ namespace MTG_ConsoleEngine
         public void End_Phase(Player _player)
         {
             CurrentPhase = PhaseType.End_Phase;
-            Console.WriteLine("End_Phase: Player "+_player.ID);
+            Console.WriteLine("End_Phase: Player " + _player.ID);
             Console.WriteLine(" - End of turn step");
             Console.WriteLine(" - Cleanup step");
+            _player.IsLandPlayedThisTurn = false;
+            MoveDeadCreaturesToGraveyard(_player);
+            MoveDeadCreaturesToGraveyard(Players[_player.ID==1?0:1]);
+        }
+
+        private static void MoveDeadCreaturesToGraveyard(Player _player)
+        {
+            var DeadCreatures = _player.CombatField.Where(c => ((Creature)c).CurrentHealth <= 0);
+            _player.Graveyard.AddRange(DeadCreatures);
+            foreach (var corpse in DeadCreatures)
+            {
+                _player.CombatField.Remove(corpse);
+            }
         }
     }
 }

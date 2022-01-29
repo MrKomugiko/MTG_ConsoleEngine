@@ -2,20 +2,24 @@ namespace MTG_ConsoleEngine.Card_Category
 {      
     public class Land : CardBase
     {
-        public bool isTapped { 
+        public override bool isTapped { 
             get => _isTapped; 
             set {
-                Console.WriteLine($"Karta {Name} została tapnięta.");
                 _isTapped = value;
+                 if(value == true)
+                    Console.WriteLine($"Land {Name} została tapnięta.");
             }
         }
         List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
         private bool _isTapped;
-      
-        public Land(string _identificator, string _name) 
-            : base(new(), _identificator, _name,"", "Creature")
-        {
 
+        public Dictionary<string, int> manaValue = new();
+      
+        public Land(string _identificator, string _name, string _manaCode, int _value = 1) 
+            : base(new(), _identificator, _name,"", "Basic Land")
+        {
+            // TODO: zakłądajac ze land nie da nigdy 2 takich samych znakow many, inaczej trzeba je zsumowac
+            manaValue.Add(_manaCode,_value);
         }
 
         public override void AddSpecialAction(string _specialActionInfo)
@@ -39,7 +43,7 @@ namespace MTG_ConsoleEngine.Card_Category
                     (
                         trigger: ActionType.Play,
                         description: _specialActionInfo,
-                        action: () => Actions.AddMana(Int32.Parse(value[0]), manaCode, Owner)
+                        action: () => Actions.PlayLandCard(Int32.Parse(value[0]), manaCode, Owner)
                     )
                 );
             }          
@@ -58,9 +62,17 @@ namespace MTG_ConsoleEngine.Card_Category
             }
         }
 
-        public override void Print() 
+        public override string GetCardString() 
         {
-            Console.WriteLine($"Name:{Name.PadLeft(30)} | Cost:{ManaCostString.PadLeft(10)} | ");
+            return $"| Name:{Name.PadLeft(30)} | Cost:{ManaCostString.PadLeft(10)} | ";
+        }
+
+        internal override (bool result, List<CardBase> landsToTap) CheckAvailability()
+        {
+            if(Owner.IsLandPlayedThisTurn)
+                return (false, new());
+
+             return (true, new());
         }
     }
 }

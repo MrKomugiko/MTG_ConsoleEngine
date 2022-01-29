@@ -9,10 +9,11 @@ namespace MTG_ConsoleEngine
             Engine.Players[firstTarget].DealDamage(value);
             cardOwner.DealDamage(value);
         }
-        public static void AddMana(int value, string colorCode, Player owner)
+        public static void PlayLandCard(int value, string colorCode, Player owner)
         {
             Console.WriteLine("dodano karte many do puli ManaField`u");
-            // TODO: mozna by cos z tym zrobic 
+            
+            owner.IsLandPlayedThisTurn = true;
         }
         public static void Haste(Creature creatureCard)
         {

@@ -55,7 +55,8 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "311_MID",
-                _name: "Swamp"
+                _name: "Swamp",
+                _manaCode: "B"
             );
             land.AddSpecialAction($"Add 1 Black mana");
             return land;
@@ -65,7 +66,8 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "275_MID",
-                _name: "Mountain"
+                _name: "Mountain",
+                _manaCode: "R"
             );
             land.AddSpecialAction($"Add 1 Red mana");
             return land;
@@ -75,7 +77,8 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "268_MID",
-                _name: "Plains"
+                _name: "Plains",
+                _manaCode: "W"
             );
             land.AddSpecialAction($"Add 1 White mana");
             return land;
@@ -85,7 +88,8 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "277_MID",
-                _name: "Forest"
+                _name: "Forest",
+                _manaCode: "G"
             );
             land.AddSpecialAction($"Add 1 Green mana");
             return land;
@@ -95,7 +99,8 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "265_M21",
-                _name: "Island"
+                _name: "Island",
+                _manaCode: "U"
             );
             land.AddSpecialAction($"Add 1 Blue mana");
             return land;

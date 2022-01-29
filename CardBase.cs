@@ -10,6 +10,7 @@ namespace MTG_ConsoleEngine
         public readonly string CardType; // Creature
         public Dictionary<string,int> ManaCost = new();
         public Player Owner {get;set;} = new();
+        public abstract bool isTapped { get; set; }
 
         public string ManaCostString = "free";
 
@@ -34,13 +35,14 @@ namespace MTG_ConsoleEngine
 
         public abstract void UseSpecialAction(ActionType trigger);
         public abstract void AddSpecialAction(string _specialActionInfo);
-        public abstract void Print();
+        public abstract string GetCardString();
 
         public object Clone()
         {
             return this.MemberwiseClone();
         }
 
+        internal abstract (bool result, List<CardBase> landsToTap) CheckAvailability();
     }
 }
 
