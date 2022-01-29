@@ -111,54 +111,39 @@ namespace MTG_ConsoleEngine.Card_Category
 
         internal override (bool result, List<CardBase> landsToTap)  CheckAvailability()
         {
-            Dictionary<string,int> SumManaOwnedAndAvailable = new();
-            //sumowanie dostepnej many
-            foreach(Land manaCard in Owner.ManaField.Where(c=>c is Land && c.isTapped == false ))
-            {
-                foreach(var mana in manaCard.manaValue)
-                {
-                    if(SumManaOwnedAndAvailable.ContainsKey(mana.Key))
-                    {
-                        SumManaOwnedAndAvailable[mana.Key] += mana.Value;
-                    } 
-                    else
-                    {
-                        SumManaOwnedAndAvailable.Add(mana.Key,mana.Value);
-                    }
-                }
-            }
-            
-            Dictionary<string,int> creatureManaCostCopy = new Dictionary<string, int>();
-            foreach(var orginalCost in ManaCost)
-            {
-                creatureManaCostCopy.Add(key:orginalCost.Key, value: orginalCost.Value); 
-            }
-        
-            var sumTotal = SumManaOwnedAndAvailable.Sum(x=>x.Value);
+            Dictionary<string, int> SumManaOwnedAndAvailable = Owner.SumAvailableManaFromManaField();
 
-            var currentLandsCardsCopy = Owner.ManaField.Where(c=>c is Land && c.isTapped == false).ToList();
+            Dictionary<string, int> creatureManaCostCopy = new Dictionary<string, int>();
+            foreach (var orginalCost in ManaCost)
+            {
+                creatureManaCostCopy.Add(key: orginalCost.Key, value: orginalCost.Value);
+            }
+
+            var sumTotal = SumManaOwnedAndAvailable.Sum(x => x.Value);
+
+            var currentLandsCardsCopy = Owner.ManaField.Where(c => c is Land && c.isTapped == false).ToList();
 
             List<CardBase> landCardsToTap = new List<CardBase>();
             // sprawdzanie pokolei posiadanych AKTYWNYCH kart landow
-            foreach(Land manaCard in currentLandsCardsCopy)
-            {    
-                if(creatureManaCostCopy.Sum(x=>x.Value) == 0) break;
-            
+            foreach (Land manaCard in currentLandsCardsCopy)
+            {
+                if (creatureManaCostCopy.Sum(x => x.Value) == 0) break;
+
                 // dopasowywanie kosztu z karty do wartosci z londu
-                foreach(KeyValuePair<string,int> cardCost in creatureManaCostCopy)
+                foreach (KeyValuePair<string, int> cardCost in creatureManaCostCopy)
                 {
-                    if(cardCost.Value == 0) continue;
-                    if(manaCard.manaValue.ContainsKey(cardCost.Key))
+                    if (cardCost.Value == 0) continue;
+                    if (manaCard.manaValue.ContainsKey(cardCost.Key))
                     {
                         // land jest tego samego typu co rodzaj kosztu
-                        if(manaCard.manaValue[cardCost.Key] >= cardCost.Value)
+                        if (manaCard.manaValue[cardCost.Key] >= cardCost.Value)
                         {
                             // wystarczajaca+ ilosc zasowu, został jeszcze zapas a ten wymagany sie wyzerowal
                             landCardsToTap.Add(manaCard);
                             creatureManaCostCopy[cardCost.Key] = 0;
 
                         }
-                        else if(cardCost.Key != "")
+                        else if (cardCost.Key != "")
                         {
                             // odejmowanie wszystkiego co mamy, i zostalo jeszcze kosztów = nie stać nas
                             return (false, new());
@@ -176,23 +161,23 @@ namespace MTG_ConsoleEngine.Card_Category
 
             var rand = new Random();
             // deal with no color cost value, random pick cards
-            landCardsToTap.ForEach(x=>currentLandsCardsCopy.Remove(x));
+            landCardsToTap.ForEach(x => currentLandsCardsCopy.Remove(x));
 
             var leftLandsCount = currentLandsCardsCopy.Count;
-            if(creatureManaCostCopy.ContainsKey(""))
+            if (creatureManaCostCopy.ContainsKey(""))
             {
-                if(creatureManaCostCopy[""] <= creatureManaCostCopy.Sum(x=>x.Value))
+                if (creatureManaCostCopy[""] <= creatureManaCostCopy.Sum(x => x.Value))
                 {
-                    while(creatureManaCostCopy[""] > 0)
+                    while (creatureManaCostCopy[""] > 0)
                     {
                         leftLandsCount = currentLandsCardsCopy.Count;
-                        if(leftLandsCount == 0)
+                        if (leftLandsCount == 0)
                         {
                             break;
                         }
 
-                        var card = (Land)currentLandsCardsCopy[rand.Next(0,leftLandsCount)];
-                        if(card.manaValue.Sum(x=>x.Value) >= creatureManaCostCopy[""])
+                        var card = (Land)currentLandsCardsCopy[rand.Next(0, leftLandsCount)];
+                        if (card.manaValue.Sum(x => x.Value) >= creatureManaCostCopy[""])
                         {
                             landCardsToTap.Add(card);
                             creatureManaCostCopy[""] = 0;
@@ -202,7 +187,7 @@ namespace MTG_ConsoleEngine.Card_Category
                         {
                             // wez wszystco co sie da xd
                             landCardsToTap.Add(card);
-                            creatureManaCostCopy[""] -= card.manaValue.Sum(x=>x.Value);
+                            creatureManaCostCopy[""] -= card.manaValue.Sum(x => x.Value);
                             currentLandsCardsCopy.Remove(card);
                         }
                     }
@@ -210,12 +195,8 @@ namespace MTG_ConsoleEngine.Card_Category
             }
 
             // na koniec liczymy czy potrzebny koszt == 0;
-            if(creatureManaCostCopy.Sum(x=>x.Value) == 0)
+            if (creatureManaCostCopy.Sum(x => x.Value) == 0)
             {
-                foreach(var land in landCardsToTap)
-                {
-                    Console.WriteLine("lands needs to tap for sake summon this creature:"+land.Name);
-                }
                 return (true, landCardsToTap);
             }
             return (false, new());

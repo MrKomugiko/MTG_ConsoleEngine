@@ -38,7 +38,6 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"Aktualne HP: {Health}");
             Console.ResetColor();
         }
-
         public void Heal(int value)
         {
             Console.BackgroundColor = ConsoleColor.White;
@@ -52,7 +51,6 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"Aktualne HP: {Health}");
             Console.ResetColor();
         }
-
         internal void AddToDeck(CardBase _card)
         {
             _card.Owner = this;
@@ -113,9 +111,8 @@ namespace MTG_ConsoleEngine
 
             return _deffendersToDeclare;
         }
-        public void PlayCardFromHand(CardBase card)
+        public void PlayCardFromHand(CardBase card, List<CardBase> landToPayCost)
         {
-
             Console.ForegroundColor = color;
             Console.WriteLine($"Gracz 1 zagrywa kartą {card.Name}");
             Hand.Remove(card);
@@ -135,6 +132,7 @@ namespace MTG_ConsoleEngine
                     card.UseSpecialAction(ActionType.Play);
                     break;
             }
+            landToPayCost.ForEach(land=>((Land)land).isTapped = true);
             Console.ResetColor();
         }
         public void DisplayPlayerField()
@@ -147,15 +145,40 @@ namespace MTG_ConsoleEngine
                 Console.WriteLine($"[ TAPPED ] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth}) <Mana:{creature.ManaCostString}>");
             Console.ResetColor();
         }
-        public void DisplayPlayerHand()
+        public Dictionary<int,(bool result,List<CardBase> landsToTap)> DisplayPlayerHand()
         {
+            string myavailableMana = String.Join(",",SumAvailableManaFromManaField().Select(x=>$"{x.Key} = {x.Value}")).ToString();
             Console.ForegroundColor = color;
             Console.WriteLine($"Player {ID} Hand:");
+            Console.WriteLine($"Current available Mana: {myavailableMana}");
+            Dictionary<int,(bool result,List<CardBase> landsToTap)> validpickwithcostcast = new();
             for(int index = 0;index < Hand.Count; index++)
-            {
-                Console.WriteLine($"[{Hand[index].CheckAvailability().ToString().PadLeft(5)}] [{index}] {Hand[index].GetCardString()}");
+            {   validpickwithcostcast.Add(index,Hand[index].CheckAvailability());
+                Console.WriteLine($"[{validpickwithcostcast[index].result.ToString().PadLeft(5)}] [{index}] {Hand[index].GetCardString()}");
             }
             Console.ResetColor();
+            return validpickwithcostcast;
+        }
+        public Dictionary<string, int> SumAvailableManaFromManaField()
+        {
+            Dictionary<string, int> SumManaOwnedAndAvailable = new();
+            //sumowanie dostepnej many
+            foreach (Land manaCard in ManaField.Where(c => c is Land && c.isTapped == false))
+            {
+                foreach (var mana in manaCard.manaValue)
+                {
+                    if (SumManaOwnedAndAvailable.ContainsKey(mana.Key))
+                    {
+                        SumManaOwnedAndAvailable[mana.Key] += mana.Value;
+                    }
+                    else
+                    {
+                        SumManaOwnedAndAvailable.Add(mana.Key, mana.Value);
+                    }
+                }
+            }
+
+            return SumManaOwnedAndAvailable;
         }
     }
 }

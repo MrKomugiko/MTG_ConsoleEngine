@@ -73,16 +73,22 @@ namespace MTG_ConsoleEngine
             CurrentPhase = PhaseType.First_Main_Phase;
             Console.WriteLine("First_Main_Phase: Player "+_player.ID);
             Console.WriteLine("\t Cast spells, instants, play enchantments, play creatures");
-            _player.DisplayPlayerHand();
+            
             Console.WriteLine("enter card index to play with / type 'skip' to skip ");
+            Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
             while(true)
             {
-                var input = Console.ReadLine()??"";
+                handdata = _player.DisplayPlayerHand();
                 
+                var input = Console.ReadLine()??"";
                 if(String.IsNullOrEmpty(input)) break;
+                if(handdata[Int32.Parse(input)].result == false)
+                {
+                    Console.WriteLine("nie mozesz zagrać tej karty i/lub nie stac cie");
+                    continue;
+                }
 
-                _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)]);
-                _player.DisplayPlayerHand();
+                _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
             }
         }
         public void Combat_Phase(Player _player)
