@@ -10,13 +10,12 @@ namespace MTG_ConsoleEngine.Card_Category
                     Console.WriteLine($"Land {Name} została tapnięta.");
             }
         }
-        List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
         private bool _isTapped;
 
         public Dictionary<string, int> manaValue = new();
       
         public Land(string _identificator, string _name, string _manaCode, int _value = 1) 
-            : base(new(), _identificator, _name,"", "Basic Land")
+            : base(new(), _identificator, _name,"", "Land")
         {
             // TODO: zakłądajac ze land nie da nigdy 2 takich samych znakow many, inaczej trzeba je zsumowac
             manaValue.Add(_manaCode,_value);
@@ -64,7 +63,7 @@ namespace MTG_ConsoleEngine.Card_Category
 
         public override string GetCardString() 
         {
-            return $"[{this.GetType().Name.PadLeft(12)} ] {base.GetCardString()} |";
+            return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ {"".PadLeft(13)}";
         }
 
         internal override (bool result, List<CardBase> landsToTap) CheckAvailability()

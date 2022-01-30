@@ -25,9 +25,13 @@ namespace MTG_ConsoleEngine
         }
         public void Start()
         {
-            Console.WriteLine("Start Game Loop");
-            Console.WriteLine("Draw 7 card Hand");
+           Console.WriteLine("Start Game Loop");
+           Console.WriteLine("Draw 7 card Hand");
             
+            Players[0].ShuffleDeck();
+            Players[1].ShuffleDeck();
+
+
             for(int i = 0;i<7;i++)
                Players[0].DrawCard();
                
@@ -70,8 +74,7 @@ namespace MTG_ConsoleEngine
             CurrentPhase = PhaseType.First_Main_Phase;
             Console.WriteLine("First_Main_Phase: Player "+_player.ID);
             Console.WriteLine("\t Cast spells, instants, play enchantments, play creatures");
-            
-            Console.WriteLine("enter card index to play with / type 'skip' to skip ");
+            Console.WriteLine("enter card index to play with / enter to skip ");
             Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
             while(true)
             {
@@ -97,26 +100,65 @@ namespace MTG_ConsoleEngine
         public void Combat_Phase(Player _player)
         {
             CurrentPhase = PhaseType.Combat_Phase;
-            Console.WriteLine("Combat_Phase: Player "+_player.ID);
+            Console.WriteLine("Combat_Phase: Player " + _player.ID);
             Console.WriteLine(" - Beginning of Combat Step");
             Console.WriteLine(" - Declare Attackers"); // playerID
             DeclaredAttackers = _player.SelectAttackers();
 
             Console.WriteLine(" - Declare Blockers Step");  // drugi gracz
-            if(DeclaredAttackers.Count > 0)
+            if (DeclaredAttackers.Count > 0)
             {
-                DeclaredDeffenders = Players[_player.ID==1?1:0].SelectDeffenders();
+                DeclaredDeffenders = Players[_player.ID == 1 ? 1 : 0].SelectDeffenders();
             }
             Console.ResetColor();
             Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {_player.ID}");
-            Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {Players[_player.ID==1?1:0].ID}");
-            Console.WriteLine(" - Combat Damage Step");
-            
+            Console.WriteLine("\t You can only cast instants");
+            Console.WriteLine("enter card index to play with / enter to skip ");
+           
+            CastInstantIfCan(_player);
+            CastInstantIfCan(Players[_player.ID == 1 ? 1 : 0]);
+           
             ExecuteCombat();
+           
             DeclaredAttackers.Clear();
             DeclaredDeffenders.Clear();
 
             Console.WriteLine(" - End of Combat Step");
+        }
+
+        private static void CastInstantIfCan(Player _player)
+        {
+            Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");
+            if (_player.Hand.Any(x => (x is Instant)))
+            {
+                Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
+                while (true)
+                {
+                    handdata = _player.DisplayPlayerHand();
+
+                    var input = Console.ReadLine() ?? "";
+                    if (String.IsNullOrEmpty(input)) break;
+
+                    int choosenIndex;
+                    if (Int32.TryParse(input, out choosenIndex) == false)
+                    {
+                        continue;
+                    }
+                    if (handdata[choosenIndex].result == false)
+                    {
+                        Console.WriteLine("nie mozesz zagrać tej karty i/lub nie stac cie");
+                        continue;
+                    }
+
+                    if(_player.Hand[choosenIndex] is Instant)
+                    {
+                        Console.WriteLine("Wybierz kartę typu instant, enter zeby anulowac");
+                        continue;
+                    }
+
+                    _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
+                }
+            }
         }
 
         private void ExecuteCombat()
@@ -138,13 +180,12 @@ namespace MTG_ConsoleEngine
 
                         attacker.Attack(defender.Key);
                     }
-                    // Console.WriteLine("---- wynik potyczki ----");
-
-                    //Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
+                    Console.WriteLine("---- wynik potyczki ----");
+                    Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
                     int index = 0;
                     foreach(var defender in DeclaredDeffenders.Where(x=>x.Value == attacker))
                     {
-                        Console.WriteLine($"{(defender.Key.CurrentHealth <= 0?"DEAD":(defender.Key.CurrentHealth < defendersHpBeforeCombat[index])?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
+                        Console.WriteLine($"{(defender.Key.CurrentHealth <= 0?"DEAD":(defender.Key.CurrentHealth < defendersHpBeforeCombat[index])?"DAMAGED":"UNTOUCHED")} Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
                         index++;
                     }
                 }
@@ -157,21 +198,19 @@ namespace MTG_ConsoleEngine
         public void Second_Main_Phase(Player _player)
         {
             CurrentPhase = PhaseType.Second_Main_Phase;
-            Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
+            //Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
         }
         public void End_Phase(Player _player)
         {
             CurrentPhase = PhaseType.End_Phase;
-            Console.WriteLine("End_Phase: Player " + _player.ID);
-            Console.WriteLine(" - End of turn step");
-            Console.WriteLine(" - Cleanup step");
+            //Console.WriteLine("End_Phase: Player " + _player.ID);
+            //Console.WriteLine(" - End of turn step");
+            //Console.WriteLine(" - Cleanup step");
             _player.IsLandPlayedThisTurn = false;
-            Console.WriteLine($"---- Player {_player.ID} : Combat Zone ----");
             MoveDeadCreaturesToGraveyard(_player);
 
             Console.WriteLine();
 
-            Console.WriteLine($"---- Player {Players[_player.ID==1?1:0].ID} : Combat Zone ----");
             _player.DisplayPlayerField();
             MoveDeadCreaturesToGraveyard(Players[_player.ID==1?1:0]);
             Players[_player.ID==1?1:0].DisplayPlayerField();

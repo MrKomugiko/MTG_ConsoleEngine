@@ -6,8 +6,6 @@ namespace MTG_ConsoleEngine.Card_Category
         public string Category { get; }
         public string UseOn { get; private set;} = "";
         public CardBase? AssignedToCard = null;
-        public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
-        
         public Enchantment(Dictionary<string, int> _manaCost, string _identificator, string _name, string _description, string _category) : 
             base(_manaCost, _identificator, _name, _description, "Enchantment")
         {
@@ -41,7 +39,7 @@ namespace MTG_ConsoleEngine.Card_Category
                 }
                 if(desc.Contains("enchanted creature gets"))
                 {
-                    var values = desc.Replace("enchanted creature gets","").Trim().Split("/");
+                    var values = desc.Replace("enchanted creature gets","").Replace(".","").Replace(",","").Trim().Split("/");
                     int extraAttackValue = Int32.Parse(values[0]);
                     int extraHealthValue = Int32.Parse(values[1]);
 
@@ -65,12 +63,12 @@ namespace MTG_ConsoleEngine.Card_Category
             
             UseSpecialAction(ActionType.OnEnnchantAdded);
         }
-        public override void UseSpecialAction(ActionType actionType)
+        public override void UseSpecialAction(ActionType trigger)
         {
             if(CardSpecialActions.Count > 0)
             {
                 Console.WriteLine("Action/s Triggered!");
-                foreach(var actions in CardSpecialActions.Where(x=>x.trigger == actionType))
+                foreach(var actions in CardSpecialActions.Where(x=>x.trigger == trigger))
                 {   
                     actions.action();
                 }
@@ -78,7 +76,7 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override string GetCardString()
         {
-            return $"[{this.GetType().Name.PadLeft(12)} ] {base.GetCardString()} |";
+            return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ {"".PadLeft(13)}";
         }
     }
 }

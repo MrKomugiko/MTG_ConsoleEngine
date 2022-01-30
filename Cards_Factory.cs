@@ -2,7 +2,7 @@ using MTG_ConsoleEngine.Card_Category;
 
 namespace MTG_ConsoleEngine
 {
-    public class Creature_Factory
+    public class Cards_Factory
     {
         public Creature Get_WalkingCorpse()
         {
@@ -137,6 +137,21 @@ namespace MTG_ConsoleEngine
              enchantment.AddSpecialAction($"Enchanted creature gets +2/+0 and has \"When this creature dies, draw a card.\"");
 
              return enchantment;
+        }
+    }
+    public class Instant_Factory
+    {
+        public Instant Get_SorinsThirst()
+        {
+            var instant = new Instant
+            (
+                _manaCost: new Dictionary<string, int>() {{ "B", 2 } },
+                _identificator: "104_WAR",
+                _name: "Sorin's Thirst",
+                _description: "''I see you're out of the wall.'' ~ Nahiri"
+            );
+             instant.AddSpecialAction($"{instant.Name} deals 2 damage to target creature and you gain 2 life.");
+             return instant;
         }
     }
 }

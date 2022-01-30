@@ -7,7 +7,9 @@ namespace MTG_ConsoleEngine.Card_Category
             Heal,
             Play,
             CreatureDied,
-        OnEnnchantAdded
+        OnEnnchantAdded,
+        Blocking,
+        CastInstant
     }
 }
 

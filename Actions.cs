@@ -21,7 +21,7 @@ namespace MTG_ConsoleEngine
             Console.WriteLine("Karta lądując na polu staje sie aktywna ( Untapped )");
             creatureCard.isTapped = false;
         }
-        public static void Lifelink(int value, Player owner)
+        public static void Heal(int value, Player owner)
         {
             // leczenie po zadaniu obrażeń 
             Console.WriteLine($"Leczysz sie za {value}.");
@@ -37,6 +37,11 @@ namespace MTG_ConsoleEngine
                 
                 Console.WriteLine($"{target.Name} po nałożeniu enchantu: atk:{target.CurrentAttack} / hp:{target.CurrentHealth}");
             }
+        }
+        public static void DamageSelectedCreature(int value, Creature target)
+        {
+            Console.WriteLine($"Damage {target.Name} with {value} damage");
+            target.CurrentHealth -= value;
         }
     }
 }

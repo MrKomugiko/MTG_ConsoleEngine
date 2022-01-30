@@ -62,12 +62,13 @@ namespace MTG_ConsoleEngine.Card_Category
                     Console.WriteLine($"Karta {Name} została tapnięta.");
             }
         }
+
+        public List<string> Perks { get; internal set; } = new List<string>();
+
         private int _currentHealth;
 
 
         public List<Enchantment> EnchantmentSlots = new();
-
-        public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
         private bool _isTapped;
         private int _baseHealth;
         private int _baseAttack;
@@ -102,12 +103,21 @@ string _name, string _category, string _description, int _health, int _attack)
             }
             if (_specialActionInfo.Contains("lifelink"))
             {
+                Perks.Add("Lifelink");
                 CardSpecialActions.Add
                 (
                     (
                         trigger: ActionType.Attack,
                         description: "Lifelink",
-                        action: () => Actions.Lifelink(this.CurrentAttack, Owner)
+                        action: () => Actions.Heal(this.CurrentAttack, Owner)
+                    )
+                );
+                CardSpecialActions.Add
+                (
+                    (
+                        trigger: ActionType.Blocking,
+                        description: "Lifelink",
+                        action: () => Actions.Heal(this.CurrentAttack, Owner)
                     )
                 );
             }
@@ -138,7 +148,7 @@ string _name, string _category, string _description, int _health, int _attack)
         public override string GetCardString()
         {
             {
-                return $"[{this.GetType().Name.PadLeft(12)} ] {base.GetCardString()} | atk:{CurrentAttack.ToString().PadLeft(2)} / hp:{CurrentHealth.ToString().PadLeft(2)} ";
+                return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ atk:{CurrentAttack.ToString().PadLeft(2)}, hp:{CurrentHealth.ToString().PadLeft(2)}";
             }
         }
         public void Attack(Creature? defender)
@@ -153,6 +163,7 @@ string _name, string _category, string _description, int _health, int _attack)
             {
                 CurrentHealth -= defender.CurrentAttack;
                 defender.CurrentHealth -= CurrentAttack;
+                defender.UseSpecialAction(ActionType.Block);
             }
             else
             {

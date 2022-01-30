@@ -4,6 +4,8 @@ namespace MTG_ConsoleEngine
 {
     public abstract class CardBase 
     {
+        public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
+
         public readonly string Identificator; // 128_M21
         public readonly string Name; // Walking Corpse
         public readonly string Description;
@@ -37,7 +39,7 @@ namespace MTG_ConsoleEngine
         public abstract void AddSpecialAction(string _specialActionInfo);
         public virtual string GetCardString()
         {
-            return $"| {Name.PadLeft(20)} | {ManaCostString.Trim().PadLeft(10)}";
+            return $"{Name.PadLeft(21)} ║ {ManaCostString.Trim().PadLeft(10)}";
         }
 
         public object Clone()
@@ -50,6 +52,7 @@ namespace MTG_ConsoleEngine
             Dictionary<string, int> SumManaOwnedAndAvailable = Owner.SumAvailableManaFromManaField();
 
             Dictionary<string, int> creatureManaCostCopy = new Dictionary<string, int>();
+            
             foreach (var orginalCost in ManaCost)
             {
                 creatureManaCostCopy.Add(key: orginalCost.Key, value: orginalCost.Value);
@@ -74,15 +77,11 @@ namespace MTG_ConsoleEngine
                         // land jest tego samego typu co rodzaj kosztu
                         if (manaCard.manaValue[cardCost.Key] >= cardCost.Value)
                         {
+                            // karta landu ma wiekszą wartosc many niz wymanagany koszt
                             // wystarczajaca+ ilosc zasowu, został jeszcze zapas a ten wymagany sie wyzerowal
                             landCardsToTap.Add(manaCard);
                             creatureManaCostCopy[cardCost.Key] = 0;
 
-                        }
-                        else if (cardCost.Key != "")
-                        {
-                            // odejmowanie wszystkiego co mamy, i zostalo jeszcze kosztów = nie stać nas
-                            return (false, new());
                         }
                         else
                         {
