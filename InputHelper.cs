@@ -7,15 +7,21 @@ namespace MTG_ConsoleEngine
         
         public static Dictionary<Creature, Creature> Input_DefendersDeclaration(List<Creature> _Attackers , List<CardBase> _CombatField)
         {
+            Console.WriteLine("'cancel' = cancel/skip\n ENTER = accept/skip");
             Dictionary<Creature, Creature> _deffendersToDeclare = new();
             while (true)
             { 
                 string input = Console.ReadLine() ?? "".Trim();
-                
+
+                if (input.ToLower() == "cancel") 
+                {
+                    Console.WriteLine("Selections canceled. Turn skipped.");
+                    return _deffendersToDeclare;
+                }
                 if (String.IsNullOrEmpty(input)) 
                 {
-                    Console.WriteLine("Cancel.");
-                    break;
+                    Console.WriteLine("Accepted. Go to next turn.");
+                    return _deffendersToDeclare;
                 }
 
                 if(input.Length<3){
@@ -41,17 +47,28 @@ namespace MTG_ConsoleEngine
                         var deffender = (Creature)_CombatField[secondInput];
                         var attacker = _Attackers[firstInput];
 
-                        if(_deffendersToDeclare.ContainsValue(deffender) == false)
-                        {
-                            Console.WriteLine("Nie można przypisać potworka do obrony przeciw dwóm różnym napastnikom");
+                        // sprawdzenie czy stworek ktorym chcemy sie broni nie jest juz tapnięty
+                        if(deffender.isTapped) {
+                            Console.WriteLine("wybierz innego blockera, ten jest niesostępny");
                             continue;
                         }
 
                         // sprawdzenie czy wpis obrony przeciw temu atakujacemu (jako klucz) juz widnieje
-                        if(_deffendersToDeclare.ContainsKey(attacker))
+                        if(_deffendersToDeclare.ContainsKey(deffender)== false)
                         {
                             // pierwsze wystąpienie obrony przeciw temu potworkowi, dodanie go wraz z naszym obrońcą
-                            _deffendersToDeclare.Add(attacker, deffender);
+                            _deffendersToDeclare.Add(deffender, attacker);
+                            Console.WriteLine($"dodano: {attacker.Name} vs {deffender.Name}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Nie można przypisać potworka do obrony przeciw dwóm różnym napastnikom");
+                        }
+
+                        if(_deffendersToDeclare.Count == _CombatField.Where(x=>((Creature)x).isTapped == false).Count())
+                        {
+                            Console.WriteLine("Brak więcej stworkow do rozdysponowania, next turn");
+                            break;
                         }
                     }
                 }

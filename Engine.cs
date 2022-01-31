@@ -115,8 +115,8 @@ namespace MTG_ConsoleEngine
             Console.WriteLine("\t You can only cast instants");
             Console.WriteLine("enter card index to play with / enter to skip ");
            
-            CastInstantIfCan(_player);
             CastInstantIfCan(Players[_player.ID == 1 ? 1 : 0]);
+            CastInstantIfCan(_player);
            
             ExecuteCombat();
            
@@ -150,7 +150,7 @@ namespace MTG_ConsoleEngine
                         continue;
                     }
 
-                    if(_player.Hand[choosenIndex] is Instant)
+                    if(_player.Hand[choosenIndex] is Instant == false)
                     {
                         Console.WriteLine("Wybierz kartę typu instant, enter zeby anulowac");
                         continue;
