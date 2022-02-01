@@ -8,7 +8,6 @@ namespace MTG_ConsoleEngine.Card_Category
             Play,
             CreatureDied,
         OnEnnchantAdded,
-        Blocking,
         CastInstant
     }
 }

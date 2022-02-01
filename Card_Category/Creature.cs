@@ -115,7 +115,7 @@ string _name, string _category, string _description, int _health, int _attack)
                 CardSpecialActions.Add
                 (
                     (
-                        trigger: ActionType.Blocking,
+                        trigger: ActionType.Block,
                         description: "Lifelink",
                         action: () => Actions.Heal(this.CurrentAttack, Owner)
                     )
@@ -123,6 +123,8 @@ string _name, string _category, string _description, int _health, int _attack)
             }
             if (_specialActionInfo.Contains("haste"))
             {
+                Perks.Add("Haste");
+
                 int value = CurrentAttack;
                 CardSpecialActions.Add
                 (
@@ -153,12 +155,12 @@ string _name, string _category, string _description, int _health, int _attack)
         }
         public void Attack(Creature? defender)
         {
+            // attacker ktory nie ma życia nie moze zaatakowac xd ( np wczesniej po potraktowaniu instantem)
             if (CurrentHealth <= 0) return;
 
             Console.ForegroundColor = ConsoleColor.DarkGreen;
-            UseSpecialAction(ActionType.Attack);
+            Console.WriteLine($"Player {Owner.PlayerNumberID} Atakuje kartą {Name}");
             Console.ResetColor();
-            Console.WriteLine($"Player {Owner.ID} Atakuje kartą {Name}");
             if (defender != null)
             {
                 CurrentHealth -= defender.CurrentAttack;
@@ -167,9 +169,10 @@ string _name, string _category, string _description, int _health, int _attack)
             }
             else
             {
-                Engine.Players[Owner.ID == 1 ? 1 : 0].DealDamage(CurrentAttack);
+                Engine.Players[Owner.PlayerNumberID == 1 ? 1 : 0].DealDamage(CurrentAttack);
             }
 
+            UseSpecialAction(ActionType.Attack);
             isTapped = true;
         }
     }

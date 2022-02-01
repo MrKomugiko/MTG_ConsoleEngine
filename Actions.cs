@@ -4,7 +4,7 @@ namespace MTG_ConsoleEngine
 {
     public class Actions{
         public static void DealDamageToBothPlayers(int value, Player cardOwner){
-            int firstTarget = cardOwner.ID == 1?1:0; 
+            int firstTarget = cardOwner.PlayerNumberID == 1?1:0; 
 
             Engine.Players[firstTarget].DealDamage(value);
             cardOwner.DealDamage(value);

@@ -20,7 +20,7 @@ for(int i = 0; i<2; i++)
         Engine.Players[i].AddToDeck(_EF.Get_InfernalScarring());
         Engine.Players[i].AddToDeck(_IF.Get_SorinsThirst());
     });
-    Enumerable.Range(0,7).ToList().ForEach( x => {
+    Enumerable.Range(0,14).ToList().ForEach( x => {
         Engine.Players[i].AddToDeck(_LF.Get_Swamp());
     });
 }

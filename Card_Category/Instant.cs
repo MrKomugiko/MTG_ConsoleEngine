@@ -6,24 +6,22 @@ namespace MTG_ConsoleEngine.Card_Category
             : base(_manaCost, _identificator, _name, _description, "Instant")
         {
         }
-
         public override bool isTapped { get; set; }
-        public void ShowInstantRequirments()
-        {
-            foreach(var action in CardSpecialActions)
-            {
-                Console.WriteLine($"\t {action.description}");
-            }
-        }
-
         public object SpellSelectedTarget { get; set; } = new();
         public List<object> GetValidTargets()
         {
-            Console.WriteLine("Get valid targets for instant: "+Name);
+            // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
+            Console.WriteLine("Get valid targets for Enchantment: "+Name);
             List<object> targets = new();
-            // sprawdzenie naszego pola
-            targets.AddRange(Engine.Players[0].CombatField.Where(x=>x is Creature));
-            targets.AddRange(Engine.Players[1].CombatField.Where(x=>x is Creature));
+         
+            var player1Creatures = Engine.Players[0].CombatField.Where(x=>x is Creature).ToList();
+            var player2Creatures = Engine.Players[1].CombatField.Where(x=>x is Creature).ToList();
+            
+            player1Creatures.ForEach(target => Console.WriteLine($"[0-{Engine.Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
+            player2Creatures.ForEach(target => Console.WriteLine($"[1-{Engine.Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
+
+            targets.AddRange(player1Creatures);
+            targets.AddRange(player2Creatures);
 
             return targets;
         }

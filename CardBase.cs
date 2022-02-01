@@ -13,6 +13,7 @@ namespace MTG_ConsoleEngine
         public Dictionary<string,int> ManaCost = new();
         public Player Owner {get;set;} = new();
         public abstract bool isTapped { get; set; }
+        public bool isAbleToPlay => CheckAvailability().result;
 
         public string ManaCostString = "free";
 
