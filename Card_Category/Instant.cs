@@ -8,24 +8,6 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override bool isTapped { get; set; }
         public object SpellSelectedTarget { get; set; } = new();
-        public List<object> GetValidTargets()
-        {
-            // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
-            Console.WriteLine("Get valid targets for Enchantment: "+Name);
-            List<object> targets = new();
-         
-            var player1Creatures = Engine.Players[0].CombatField.Where(x=>x is Creature).ToList();
-            var player2Creatures = Engine.Players[1].CombatField.Where(x=>x is Creature).ToList();
-            
-            player1Creatures.ForEach(target => Console.WriteLine($"[0-{Engine.Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-            player2Creatures.ForEach(target => Console.WriteLine($"[1-{Engine.Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-
-            targets.AddRange(player1Creatures);
-            targets.AddRange(player2Creatures);
-
-            return targets;
-        }
-
         public override void AddSpecialAction(string _specialActionInfo)
         {
              _specialActionInfo = _specialActionInfo.ToLower(); 
@@ -44,7 +26,7 @@ namespace MTG_ConsoleEngine.Card_Category
                         (
                             trigger: ActionType.CastInstant,
                             description: desc,
-                            action: () => Actions.DamageSelectedCreature(damageValue, (Creature)SpellSelectedTarget)
+                            action: () => Actions.DamageSelectedCreature(damageValue, (Creature)this.SpellSelectedTarget)
                         )
                     );
                     continue;
@@ -59,7 +41,7 @@ namespace MTG_ConsoleEngine.Card_Category
                         (
                             trigger: ActionType.CastInstant,
                             description: desc,
-                            action: () => Actions.Heal(healValue,Owner)
+                            action: () => Actions.Heal(healValue,this.Owner)
                         )
                     );
                     continue;

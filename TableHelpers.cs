@@ -4,7 +4,7 @@ namespace MTG_ConsoleEngine
 {
     public static class TableHelpers
     {
-        internal static void DisplayFieldTable(ConsoleColor _color, List<CardBase> _combatField, int _playerNumberID )
+        internal static void DisplayFieldTable(Engine _gameEngine, ConsoleColor _color, List<CardBase> _combatField, int _playerNumberID )
         {
             Console.ForegroundColor = _color;
 
@@ -27,12 +27,16 @@ namespace MTG_ConsoleEngine
             foreach (Creature creature in _combatField.Where(c => (c is Creature)))
             {
                 int currentIndex = _combatField.IndexOf(creature);
-                if(Engine.DeclaredAttackers.Contains(creature) == true)
+                if(_gameEngine.GetAttackerDeclaration().Contains(creature) == true)
                 {
                     alertInfo = " ATTACK INCOMMING! ";
-                }else if(Engine.DeclaredDeffenders.ContainsValue(creature) == true)
+                }else if(_gameEngine.GetDeffendersDeclaration().ContainsValue(creature) == true)
                 {
                     alertInfo = "   ON DEFFENDING.  ";
+                }
+                else
+                {
+                    alertInfo = "";
                 }
                 rowWithID(creature); //║   4  ║   Ready   ║             Banehound ║ atk: 3, hp: 1 ║       .......       ║
 
@@ -258,7 +262,7 @@ namespace MTG_ConsoleEngine
             Console.WriteLine("╚═══════╩════╩══════════════╩═══════════════════════╩════════════╩═══════════════╝");
             Console.ResetColor();
         }
-        public static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster()
+        internal static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster(Engine _gameEngine)
         {
             int choosenIndexField, choosenIndexCreature;
             while(true)
@@ -290,9 +294,9 @@ namespace MTG_ConsoleEngine
                     Console.WriteLine("niepoprawny index karty z pola, sprobuj ponownie");
                     continue;
                 }
-                if(choosenIndexCreature > 0 && choosenIndexCreature >= Engine.Players[choosenIndexField].CombatField.Count) 
+                if(choosenIndexCreature > 0 && choosenIndexCreature >= _gameEngine.Players[choosenIndexField].CombatField.Count) 
                 {
-                    Console.WriteLine($"niepoprawny numer karty potworka, podaj wartosc od 0 do {Engine.Players[choosenIndexField].CombatField.Count-1}, spróbuj ponownie");
+                    Console.WriteLine($"niepoprawny numer karty potworka, podaj wartosc od 0 do {_gameEngine.Players[choosenIndexField].CombatField.Count-1}, spróbuj ponownie");
                     continue;   
                 }
 

@@ -4,7 +4,7 @@ namespace MTG_ConsoleEngine
 {
     public static class InputHelper
     {
-        public static Dictionary<Creature, Creature> Input_DefendersDeclaration(List<Creature> _Attackers , List<Creature> _legalDeffenders, int _playerIndex)
+        public static Dictionary<Creature, Creature> Input_DefendersDeclaration(Engine _gameEngine, List<Creature> _Attackers , List<Creature> _legalDeffenders, int _playerIndex)
         {
             Console.WriteLine("[ Example input: 0-0, 0-1, 1-2 ]\n[ AttackerIndex - YourDefenderIndex , ...-...]");   
             Dictionary<Creature, Creature> _deffendersToDeclare = new();
@@ -29,7 +29,7 @@ namespace MTG_ConsoleEngine
                         // sprawdzenie czy zakresy podanych ID nie wykraczaja poza dozwolone granice liczby mobkow
                         if(attackerID<_Attackers.Count && deffenderID < _legalDeffenders.Count)
                         {
-                            if(_Attackers.Contains(_Attackers[attackerID]) && Engine.Players[_playerIndex].CombatField.Contains(_legalDeffenders[deffenderID]))
+                            if(_Attackers.Contains(_Attackers[attackerID]) && _gameEngine.Players[_playerIndex].CombatField.Contains(_legalDeffenders[deffenderID]))
                             {
                                 var deffender = (Creature)_legalDeffenders[deffenderID];
                                 var attacker = _Attackers[attackerID];
@@ -44,7 +44,7 @@ namespace MTG_ConsoleEngine
                                 if(_deffendersToDeclare.ContainsKey(deffender)== false)
                                 {
                                     // pierwsze wystąpienie obrony przeciw temu potworkowi, dodanie go wraz z naszym obrońcą
-                                    _deffendersToDeclare.Add(attacker,deffender);
+                                    _deffendersToDeclare.Add(deffender,attacker);
                                     Console.WriteLine($"dodano: {attacker.Name} vs {deffender.Name}");
                                 }
                                 else
@@ -118,7 +118,7 @@ namespace MTG_ConsoleEngine
                 return _deffendersToDeclare;
             }
         }
-        public static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster()
+        public static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster(Engine _gameEngine)
         {
             Console.WriteLine("[ Example input: 0-0 ] [ TargetPlayer - TargetCreature ]");
             int choosenIndexField, choosenIndexCreature;
@@ -151,9 +151,9 @@ namespace MTG_ConsoleEngine
                     Console.WriteLine("niepoprawny index karty z pola, sprobuj ponownie");
                     continue;
                 }
-                if(choosenIndexCreature > 0 && choosenIndexCreature > Engine.Players[choosenIndexField].CombatField.Count-1) 
+                if(choosenIndexCreature > 0 && choosenIndexCreature > _gameEngine.Players[choosenIndexField].CombatField.Count-1) 
                 {
-                    Console.WriteLine($"niepoprawny numer karty potworka, podaj wartosc od 0 do {Engine.Players[choosenIndexField].CombatField.Count-1}, spróbuj ponownie");
+                    Console.WriteLine($"niepoprawny numer karty potworka, podaj wartosc od 0 do {_gameEngine.Players[choosenIndexField].CombatField.Count-1}, spróbuj ponownie");
                     continue;   
                 }
 

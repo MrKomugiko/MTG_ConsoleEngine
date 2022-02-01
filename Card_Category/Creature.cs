@@ -2,6 +2,9 @@ namespace MTG_ConsoleEngine.Card_Category
 {
     public class Creature : CardBase
     {
+        private readonly int CoreHealth; // orginalnie, bez zanych boostów
+        private readonly int CoreAttack; // orginalnie, bez zanych boostów
+
         public int BaseHealth { 
             get => _baseHealth; 
             set {
@@ -39,10 +42,7 @@ namespace MTG_ConsoleEngine.Card_Category
                         EnchantmentSlots.ForEach(ench=>Owner.Graveyard.Add(ench));
                         // usunięcie wszystkich enczantów z karty po jej smierci
                         EnchantmentSlots.Clear();
-                    }
-                    Console.WriteLine($"send {Name} to Graveyard...");
-                    Owner.Graveyard.Add(this);
-                    Owner.CombatField.Remove(this);                    
+                    }                
                 }
                 else
                 {
@@ -62,26 +62,24 @@ namespace MTG_ConsoleEngine.Card_Category
                     Console.WriteLine($"Karta {Name} została tapnięta.");
             }
         }
-
         public List<string> Perks { get; internal set; } = new List<string>();
-
         private int _currentHealth;
-
-
         public List<Enchantment> EnchantmentSlots = new();
         private bool _isTapped;
         private int _baseHealth;
         private int _baseAttack;
 
-        public Creature(Dictionary<string, int> _manaCost, string _identificator,
-string _name, string _category, string _description, int _health, int _attack)
-: base(_manaCost, _identificator, _name, _description, "Creature")
+        public Creature(Dictionary<string, int> _manaCost, string _identificator,string _name, string _category, string _description, int _health, int _attack)
+            : base(_manaCost, _identificator, _name, _description, "Creature")
         {
-            BaseHealth = _health;
-            CurrentHealth = BaseHealth;
-            BaseAttack = _attack;
-            CurrentAttack = BaseAttack;
-            Category = _category;
+            this.BaseHealth = _health;
+            this.CurrentHealth = BaseHealth;
+            this.BaseAttack = _attack;
+            this.CurrentAttack = BaseAttack;
+            this.Category = _category;
+
+            this.CoreHealth = _health;
+            this.CoreAttack = _attack;
         }
         public override void AddSpecialAction(string _specialActionInfo)
         {
@@ -97,7 +95,7 @@ string _name, string _category, string _description, int _health, int _attack)
                     (
                         trigger: ActionType.Attack,
                         description: _specialActionInfo,
-                        action: () => Actions.DealDamageToBothPlayers(value, Owner)
+                        action: () => Actions.DealDamageToBothPlayers(value, this.Owner)
                     )
                 );
             }
@@ -109,7 +107,7 @@ string _name, string _category, string _description, int _health, int _attack)
                     (
                         trigger: ActionType.Attack,
                         description: "Lifelink",
-                        action: () => Actions.Heal(this.CurrentAttack, Owner)
+                        action: () => Actions.Heal(this.CurrentAttack, this.Owner)
                     )
                 );
                 CardSpecialActions.Add
@@ -117,7 +115,7 @@ string _name, string _category, string _description, int _health, int _attack)
                     (
                         trigger: ActionType.Block,
                         description: "Lifelink",
-                        action: () => Actions.Heal(this.CurrentAttack, Owner)
+                        action: () => Actions.Heal(this.CurrentAttack, this.Owner)
                     )
                 );
             }
@@ -125,7 +123,7 @@ string _name, string _category, string _description, int _health, int _attack)
             {
                 Perks.Add("Haste");
 
-                int value = CurrentAttack;
+                int value = this.CurrentAttack;
                 CardSpecialActions.Add
                 (
                     (
@@ -153,23 +151,33 @@ string _name, string _category, string _description, int _health, int _attack)
                 return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ atk:{CurrentAttack.ToString().PadLeft(2)}, hp:{CurrentHealth.ToString().PadLeft(2)}";
             }
         }
-        public void Attack(Creature? defender)
+        public void Attack(Creature? _defender)
         {
             // attacker ktory nie ma życia nie moze zaatakowac xd ( np wczesniej po potraktowaniu instantem)
-            if (CurrentHealth <= 0) return;
-
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.WriteLine($"Player {Owner.PlayerNumberID} Atakuje kartą {Name}");
-            Console.ResetColor();
-            if (defender != null)
+            if (CurrentHealth <= 0) 
             {
-                CurrentHealth -= defender.CurrentAttack;
-                defender.CurrentHealth -= CurrentAttack;
-                defender.UseSpecialAction(ActionType.Block);
+               // Console.WriteLine($"Jednostka atakujaca {(this.Name)} już nie żyje, atak nie zostaje wyprowadzony. next");
+                return; 
+            }
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine($"Player {Owner.PlayerNumberID} Atakuje kartą {this.Name}");
+            Console.ResetColor();
+            if (_defender != null)
+            {
+                if (_defender.CurrentHealth <= 0) 
+                {
+                    Console.WriteLine($"Przeciwnik {(_defender.Name)} już nie żyje, atak nie obrona nie zostałą przeprowadzona przez nią.");
+                    return; 
+                }
+                this.CurrentHealth -= _defender.CurrentAttack;
+                _defender.CurrentHealth -= this.CurrentAttack;
+                _defender.UseSpecialAction(ActionType.Block);
+              
             }
             else
             {
-                Engine.Players[Owner.PlayerNumberID == 1 ? 1 : 0].DealDamage(CurrentAttack);
+                Console.WriteLine("Atak nie napotkał obrony, atak w Przeciwnika (Player'a)");
+                Owner.Opponent.DealDamage(this.CurrentAttack);
             }
 
             UseSpecialAction(ActionType.Attack);

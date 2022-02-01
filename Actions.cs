@@ -4,9 +4,7 @@ namespace MTG_ConsoleEngine
 {
     public class Actions{
         public static void DealDamageToBothPlayers(int value, Player cardOwner){
-            int firstTarget = cardOwner.PlayerNumberID == 1?1:0; 
-
-            Engine.Players[firstTarget].DealDamage(value);
+            cardOwner.Opponent.DealDamage(value);
             cardOwner.DealDamage(value);
         }
         public static void PlayLandCard(int value, string colorCode, Player owner)
@@ -18,7 +16,7 @@ namespace MTG_ConsoleEngine
         public static void Haste(Creature creatureCard)
         {
             // karta jest aktywna orazu po wprowadzeniu jej na pole / mozna nią odrazu atakowac lub uzyc umiejetnosci
-            Console.WriteLine("Karta lądując na polu staje sie aktywna ( Untapped )");
+            Console.WriteLine("Aktywowanie efektu Haste: Karta wkraca na pole bez efektu osłabienia\n(można nią zaatakować w tej samej turze)");
             creatureCard.isTapped = false;
         }
         public static void Heal(int value, Player owner)

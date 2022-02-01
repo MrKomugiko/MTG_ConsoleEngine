@@ -2,9 +2,9 @@ using MTG_ConsoleEngine.Card_Category;
 
 namespace MTG_ConsoleEngine
 {
-    public class Cards_Factory
+    public static  class Creature_Factory
     {
-        public Creature Get_WalkingCorpse()
+        public  static Creature Get_WalkingCorpse()
         {
             return new Creature
             (
@@ -17,7 +17,7 @@ namespace MTG_ConsoleEngine
                 _attack: 2
             );
         }
-        public Creature Get_InfectiousHorror()
+        public static Creature Get_InfectiousHorror()
         {
             var creature = new Creature
             (
@@ -32,7 +32,7 @@ namespace MTG_ConsoleEngine
             creature.AddSpecialAction($"Whenever {creature.Name} attacks, each opponent loses 2 life.");
             return creature;
         }
-        public Creature Get_Banehound()
+        public static Creature Get_Banehound()
         {
             var creature = new Creature
             (
@@ -48,9 +48,9 @@ namespace MTG_ConsoleEngine
             return creature;
         }
     }
-    public class Land_Factory
+    public  static class Land_Factory
     {
-        public Land Get_Swamp()
+        public  static Land Get_Swamp()
         {
             var land = new Land
             (
@@ -61,7 +61,7 @@ namespace MTG_ConsoleEngine
             land.AddSpecialAction($"Add 1 Black mana");
             return land;
         }
-        public Land Get_Mountain()
+        public static  Land Get_Mountain()
         {
             var land = new Land
             (
@@ -72,7 +72,7 @@ namespace MTG_ConsoleEngine
             land.AddSpecialAction($"Add 1 Red mana");
             return land;
         }
-        public Land Get_Plains()
+        public static Land Get_Plains()
         {
             var land = new Land
             (
@@ -83,7 +83,7 @@ namespace MTG_ConsoleEngine
             land.AddSpecialAction($"Add 1 White mana");
             return land;
         }
-        public Land Get_Forest()
+        public static Land Get_Forest()
         {
             var land = new Land
             (
@@ -94,7 +94,7 @@ namespace MTG_ConsoleEngine
             land.AddSpecialAction($"Add 1 Green mana");
             return land;
         }
-        public Land Get_Island()
+        public static  Land Get_Island()
         {
             var land = new Land
             (
@@ -106,9 +106,9 @@ namespace MTG_ConsoleEngine
             return land;
         }
     }
-    public class Enchantment_Factory
+    public  static class Enchantment_Factory
     {
-        public Enchantment Get_DeadWeight()
+        public static Enchantment Get_DeadWeight()
         {
             var enchantment = new Enchantment
             (
@@ -122,7 +122,7 @@ namespace MTG_ConsoleEngine
              enchantment.AddSpecialAction($"Enchanted creature gets -2/-2.");
              return enchantment;
         }
-        public Enchantment Get_InfernalScarring()
+        public static Enchantment Get_InfernalScarring()
         {
             var enchantment = new Enchantment
             (
@@ -139,9 +139,9 @@ namespace MTG_ConsoleEngine
              return enchantment;
         }
     }
-    public class Instant_Factory
+    public  static class Instant_Factory
     {
-        public Instant Get_SorinsThirst()
+        public static Instant Get_SorinsThirst()
         {
             var instant = new Instant
             (

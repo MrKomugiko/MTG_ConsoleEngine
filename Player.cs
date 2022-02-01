@@ -4,7 +4,13 @@ namespace MTG_ConsoleEngine
 {
     public class Player
     {
-        public int PlayerNumberID { get;  internal set; } 
+        public Engine _gameEngine;
+        public Player Opponent;
+
+        public readonly int PlayerNumberID;
+        public readonly int PlayerIndex;
+        public readonly ConsoleColor color;
+
         public int Health { get; internal set; } = 20;
         public List<CardBase> ManaField {get; internal set; } = new();
         public List<CardBase> CombatField {get; private set; } = new();
@@ -14,15 +20,15 @@ namespace MTG_ConsoleEngine
         public List<CardBase> Exiled { get; private set; } = new();
         public bool IsLandPlayedThisTurn { get; internal set; }
 
-        public readonly ConsoleColor color;
         
-        public Player(){}
-        public Player( int _id, int _health) 
+        public Player(int _number, int _health) 
         {
-            this.PlayerNumberID = _id;
+            this.PlayerNumberID = _number;
+            this.PlayerIndex = _number==1?0:1;
+
             this.Health = _health;
         
-            if(_id == 1) color = ConsoleColor.Blue;
+            if(_number == 1) color = ConsoleColor.Blue;
             else color= ConsoleColor.Green;
         }
         public void DealDamage(int value)
@@ -35,7 +41,7 @@ namespace MTG_ConsoleEngine
                 Console.Write($"Player {PlayerNumberID} otrzymał {value} obrażeń. ");
             }  
             Health -= value;
-            Console.WriteLine($"Aktualne HP: {Health}");
+            //Console.WriteLine($"Aktualne HP: {Health}");
             Console.ResetColor();
         }
         public void Heal(int value)
@@ -48,7 +54,7 @@ namespace MTG_ConsoleEngine
                 Console.Write($"Player {PlayerNumberID} został uleczony o {value} hp.");
             }  
             Health += value;
-            Console.WriteLine($"Aktualne HP: {Health}");
+            //Console.WriteLine($"Aktualne HP: {Health}");
             Console.ResetColor();
         }
         internal void AddToDeck(CardBase _card)
@@ -65,19 +71,22 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
             Console.ResetColor();
         }
-        internal List<Creature> Get_AvailableAttackers() {
-            Console.WriteLine("dostępne kreatury do ataku: "); 
+        private List<Creature> Get_AvailableAttackers() {
 
             var possibleAttackers = CombatField.Where(x=> x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
+            if(possibleAttackers.Count == 0) {
+                Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
+                return new();
+            }
+            Console.WriteLine("dostępne kreatury do ataku: "); 
             possibleAttackers.ForEach(x => 
                     Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
                 );
             
             return possibleAttackers;
         } 
-        internal List<Creature> Get_AvailableDeffenders() {
+        private List<Creature> Get_AvailableDeffenders() {
             var possibleDefenders = CombatField.Where(x=>x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
-           
             if(possibleDefenders.Count == 0) return new();
 
             Console.WriteLine("Dostępne jednostki do obrony");
@@ -87,13 +96,15 @@ namespace MTG_ConsoleEngine
             return possibleDefenders;
 
         } 
-        internal List<Creature> SelectAttackers()
+        public List<Creature> SelectAttackers_HumanInteraction()
         {
             TryAgain:
             Console.ForegroundColor = color;
             DisplayPlayerField();
-            Console.WriteLine("Wybierz atakujących z dostępnych kreatur na polu: \n[ indexy oddzielaj przecinkiem: 0,1,3... ]");
-List<Creature> availableTargets = Get_AvailableAttackers();
+            Console.WriteLine("Wybierz atakujących z dostępnych kreatur na polu: [ indexy oddzielaj przecinkiem: 0,1,3... ]");
+            // TODO: zrobic kopie tej metody dla automatycznej odpowiedzi ze strony AI
+            List<Creature> availableTargets = Get_AvailableAttackers();
+            if(availableTargets.Count == 0) return new();
 
             string input = Console.ReadLine()??"";
             Console.ResetColor();
@@ -122,7 +133,6 @@ List<Creature> availableTargets = Get_AvailableAttackers();
                     else
                     {
                         if(_attackersToDeclare.Contains(attackingCreature)) _attackersToDeclare.Remove(attackingCreature); // TODO: raczej nie potrzebne w tym miejscu
-
                         Console.WriteLine($"pominieto, {attackingCreature.Name} nie moze teraz walczyć");
                         continue;
                     }
@@ -138,21 +148,23 @@ List<Creature> availableTargets = Get_AvailableAttackers();
         
             return _attackersToDeclare;
         }
-        public Dictionary<Creature,Creature> SelectDeffenders()
+        public Dictionary<Creature,Creature> SelectDeffenders_HumanInteraction()
         {
             Console.WriteLine("Nadchodzący Atak:");
-            foreach (Creature creature in Engine.DeclaredAttackers)
+            var DeclaredAttackers = _gameEngine.GetAttackerDeclaration();
+            foreach (Creature creature in DeclaredAttackers)
             {
-                Console.WriteLine($"[{Engine.DeclaredAttackers.IndexOf(creature)}] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth})");
+                Console.WriteLine($"[{DeclaredAttackers.IndexOf(creature)}] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth})");
             }
 
             Console.ForegroundColor = color;
 
             Console.WriteLine($"---------- Enemy Attackers ID ----------");
-            Engine.Players[PlayerNumberID==1?1:0].DisplayPlayerField();                
-            Console.WriteLine($"[{(PlayerNumberID==1?0:1)}] => Your Combat field Cards:");
+            _gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();                
+            Console.WriteLine($"[{(PlayerIndex)}] => Your Combat field Cards:  <--- niepotrzebne,usunąć ?");
             this.DisplayPlayerField();
             
+            // TODO: zrobic kopie tej metody dla automatycznej odpowiedzi ze strony AI
             var availableDeffenders = Get_AvailableDeffenders();
             
             if(availableDeffenders.Count == 0){
@@ -160,8 +172,7 @@ List<Creature> availableTargets = Get_AvailableAttackers();
                 return new();
             }
             
-            return InputHelper.Input_DefendersDeclaration(Engine.DeclaredAttackers, availableDeffenders, PlayerNumberID-1 /* index */);
-//            Console.ResetColor();
+            return InputHelper.Input_DefendersDeclaration(_gameEngine, DeclaredAttackers, availableDeffenders, PlayerIndex /* index */);
         }
         public void PlayCardFromHand(CardBase card, List<CardBase> landToPayCost)
         {
@@ -187,17 +198,17 @@ List<Creature> availableTargets = Get_AvailableAttackers();
                 case Enchantment e:
                     if(e.UseOn == "Creature")   
                     {
-                        List<object> availableTargets2 = e.GetValidTargets();
+                        List<object> availableTargets2 = _gameEngine.GetValidTargetsForCardType(e);
                         if(availableTargets2.Count == 0) return;
 
-                        Console.WriteLine($"[{(PlayerNumberID==1?0:1)}] => Your Combat field Cards:");
+                        Console.WriteLine($"[{(this.PlayerIndex)}] => Your Combat field Cards:");
                         this.DisplayPlayerField();
-                        Console.WriteLine($"[{(PlayerNumberID==1?1:0)}] => Enemies Combat field Cards:");
-                        Engine.Players[PlayerNumberID==1?1:0].DisplayPlayerField();                
-                        playerResponse = InputHelper.Input_SinglePairPlayerMonster();
+                        Console.WriteLine($"[{(Opponent.PlayerIndex)}] => Enemies Combat field Cards:");
+                        _gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();                
+                        playerResponse = InputHelper.Input_SinglePairPlayerMonster(_gameEngine);
                         
                         if(playerResponse.status == true) {
-                            e.AssingToCreature((Creature)(Engine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));
+                            e.AssingToCreature((Creature)(_gameEngine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));
                         }
                         else {
                             Console.WriteLine("anuluj, skip");
@@ -206,26 +217,26 @@ List<Creature> availableTargets = Get_AvailableAttackers();
                     }
                     else
                     {
-                        //TODO:
-                        Console.WriteLine("Użycie Enchantmenta na postaci");
+                        //TODO: rozwazyc opcje dodania enczanta permamentnego, ktory poprostu jest na stole 
+                        Console.WriteLine("Użycie Enchantmenta na postaci/stole");
                         throw new NotImplementedException();
                     }
                     break;
 
                 case Instant i:
-                // TODO: rozróżnic kiedy instant potrzebuje celu a kiedy nie
-                    List<object> availableTargets = i.GetValidTargets();
+                    List<object> availableTargets = _gameEngine.GetValidTargetsForCardType(i);
+
                     if(availableTargets.Count == 0) return;
 
-                    Console.WriteLine($"[{(PlayerNumberID==1?0:1)}] => Your Combat field Cards:");
+                    Console.WriteLine($"[{this.PlayerIndex}] => Your Combat field Cards:");
                     this.DisplayPlayerField();
-                    Console.WriteLine($"[{(PlayerNumberID==1?1:0)}] => Enemies Combat field Cards:");
-                    Engine.Players[PlayerNumberID==1?1:0].DisplayPlayerField();   
-                    playerResponse = InputHelper.Input_SinglePairPlayerMonster();
+                    Console.WriteLine($"[{(Opponent.PlayerIndex)}] => Enemies Combat field Cards:");
+                    _gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();   
+                    playerResponse = InputHelper.Input_SinglePairPlayerMonster(_gameEngine);
                     
                     if(playerResponse.status == true) 
                     {
-                        i.SpellSelectedTarget = ((Creature)(Engine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));             
+                        i.SpellSelectedTarget = ((Creature)(_gameEngine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));             
                         i.UseSpecialAction(ActionType.CastInstant);
                     }
                     else 
@@ -241,8 +252,7 @@ List<Creature> availableTargets = Get_AvailableAttackers();
             landToPayCost.ForEach(land=>((Land)land).isTapped = true);
             Console.ResetColor();
         }
-        public void DisplayPlayerField() => TableHelpers.DisplayFieldTable(color, CombatField, PlayerNumberID);
-       // public void DisplayPlayerAttackers() => TableHelpers.DisplayFieldTable(color, Engine.DeclaredAttackers.Select(x=>((CardBase)x)).ToList(), PlayerNumberID);
+        public void DisplayPlayerField() => TableHelpers.DisplayFieldTable(_gameEngine, color, CombatField, PlayerNumberID);
         public Dictionary<int,(bool result,List<CardBase> landsToTap)> Get_and_DisplayPlayerHand()
         {
             Dictionary<string,int> currentMana = SumAvailableManaFromManaField();
@@ -275,18 +285,6 @@ List<Creature> availableTargets = Get_AvailableAttackers();
             }
 
             return SumManaOwnedAndAvailable;
-        }
-
-        internal void ShuffleDeck()
-        {
-            var rand = new Random();
-            for (var i = Deck.Count - 1; i > 0; i--)
-            {
-                var temp = Deck[i];
-                var index = rand.Next(0, i + 1);
-                Deck[i] = Deck[index];
-                Deck[index] = temp;
-            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace MTG_ConsoleEngine
         public readonly string Description;
         public readonly string CardType; // Creature
         public Dictionary<string,int> ManaCost = new();
-        public Player Owner {get;set;} = new();
+        public Player Owner {get;set;}
         public abstract bool isTapped { get; set; }
         public bool isAbleToPlay => CheckAvailability().result;
 
@@ -42,9 +42,9 @@ namespace MTG_ConsoleEngine
         {
             return $"{Name.PadLeft(21)} ║ {ManaCostString.Trim().PadLeft(10)}";
         }
-
         public object Clone()
         {
+            //TODO: sprawdzic czy napewno dziala jak powinno 
             return this.MemberwiseClone();
         }
 
