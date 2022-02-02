@@ -10,6 +10,8 @@ namespace MTG_ConsoleEngine
             Dictionary<Creature, Creature> _deffendersToDeclare = new();
             while (true)
             { 
+                
+                TryAgain:
                 string input = Console.ReadLine()??"";
 
                 if (String.IsNullOrEmpty(input)) 
@@ -23,6 +25,12 @@ namespace MTG_ConsoleEngine
                 {                                           
                     int attackerID, deffenderID;
                     string[] input_splitted = pair.Split("-");  // [0],[0]
+                    if(input_splitted.Length<2)
+                    {
+                        Console.WriteLine("zły format use 0-0,1-0,2-0  (deffender VS attacker), wprowadz ponownie:");
+                        goto TryAgain;
+
+                    }
                     // sprawdzenie czy dwa podane parametry sa liczbą 
                     if(Int32.TryParse(input_splitted[0], out attackerID) && Int32.TryParse(input_splitted[1],out deffenderID))
                     {   

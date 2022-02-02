@@ -1,7 +1,7 @@
 ﻿using MTG_ConsoleEngine;
 Console.WriteLine("MTG Game Engine");
 
-Player Player1 = new Player(1,20);
+Player Player1 = new Player(1,20,true);
 Player Player2 = new Player(2,20,true); 
 Player1.Opponent = Player2;
 Player2.Opponent = Player1;

@@ -10,6 +10,30 @@ namespace MTG_ConsoleEngine
     public partial class Player
     {
         Random rand = new Random();
+        private static IEnumerable<int[]> Combinations(int k, int n)
+        {
+            var result = new int[k];
+            var stack = new Stack<int>();
+            stack.Push(1);
+
+            while (stack.Count > 0)
+            {
+                var index = stack.Count - 1;
+                var value = stack.Pop();
+
+                while (value <= n)
+                {
+                    result[index++] = value++;
+                    stack.Push(value);
+                    if (index == k)
+                    {
+                        yield return result;
+                        break;
+                    }
+                }
+            }
+        }
+        
         public List<int[]> GetAllPossibleAttackCombinationsIndexes(List<Creature> _availableTargets)
         {
             List<int[]> result = new List<int[]>();
@@ -41,6 +65,10 @@ namespace MTG_ConsoleEngine
                     {
                         continue;
                     }
+                    for (int i = 0; i < myindexes.Length; i++)
+                    {
+                        myindexes[i] -= 1;
+                    }
                 }
                 trimmedArr.Add(myindexes);
             }
@@ -48,28 +76,137 @@ namespace MTG_ConsoleEngine
             trimmedArr.Add(new int[1] { -1 });
             return trimmedArr;
         }
-        private static IEnumerable<int[]> Combinations(int k, int n)
+        public void RemoveOneCardFromHand()
         {
-            var result = new int[k];
-            var stack = new Stack<int>();
-            stack.Push(1);
-
-            while (stack.Count > 0)
+            /*_AI_*/ // remove one random card if total holding > 7
+            int randomIndexToRemove = rand.Next(1, this.Hand.Count);
+            CardBase card = this.Hand[randomIndexToRemove];
+            Console.WriteLine("LOSOWO! Wyrzuciłeś " + card.Name);
+            this.Graveyard.Add(card);
+            this.Hand.Remove(card);
+        }
+        public void PlayRandomLandFromHand()
+        {
+            /*_AI_*/ // auto pick land if possible
+            CardBase firstLandFromHAnd = this.Hand.FirstOrDefault(x => x is Land);
+            if (firstLandFromHAnd != null)
             {
-                var index = stack.Count - 1;
-                var value = stack.Pop();
-
-                while (value <= n)
-                {
-                    result[index++] = value++;
-                    stack.Push(value);
-                    if (index == k)
-                    {
-                        yield return result;
-                        break;
-                    }
-                }
+                Console.WriteLine("Auto place Land");
+                this.PlayCardFromHand(firstLandFromHAnd);
             }
         }
-    }
-}
+        public void PlayRandomInstatFromHand()
+        {
+            /*_AI_*/ // random pick instant if can
+            Console.WriteLine("IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI");
+
+            while(true)
+            {
+                List<Instant> availableInstants = this.Hand.Where(x => x is Instant && x.isAbleToPlay)
+                        .Select(x=>(Instant)x).ToList();
+                Console.WriteLine("lista mozliwych akcji");
+                foreach (Instant card in availableInstants)
+                {
+                    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}]");
+                }
+
+                if (availableInstants.Count() == 0) break;
+
+                //TODO: wybieranie skila jakos xd
+                // sprawdzanie czy jest jakis powod do uzywania instanta xd 
+                //  ewentualknie dodac narazie losowy, bedzie dzialac przy 1 intancie 
+                //  gorzej gdy bedziie kilka opcji ... hmm
+                Console.WriteLine(">> AI CANT CHOOSE INSTANTS YET! <<");
+                break;
+            }
+
+        }
+
+        public void MakePlaysWithRandomCardFromHand()
+        {
+            Console.WriteLine("IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI");
+            // hard coded play creature if can
+            while (true)
+            {
+                // get list available draws
+                Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
+
+                List<CardBase> randomPlays = this.Hand.Where(card => card.isAbleToPlay).ToList();
+                var creaturesOnly = randomPlays.Where(c => c is Creature).ToList();
+                Console.WriteLine("lista mozliwych akcji");
+                foreach (CardBase card in randomPlays)
+                {
+                    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}] {((card is Creature)?"<---":"")}");
+                }
+
+                if (creaturesOnly.Count() == 0) break;
+                CardBase randomCreatureFromHand = creaturesOnly[rand.Next(0, creaturesOnly.Count())];
+                this.PlayCardFromHand(randomCreatureFromHand);
+            }
+        }
+        public void RandomAttackDeclaration()
+        {
+            /*_AI_*/ // random attack sequention from available
+            List<Creature> availableTargets = this.Get_AvailableAttackers();
+            List<int[]> randomIndexesList = this.GetAllPossibleAttackCombinationsIndexes(availableTargets);
+            int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
+
+            _gameEngine.DeclaredAttackers = this.SelectAttackers_AI(inputArr, true);
+        }
+        public Dictionary<Creature,Creature> RandomDeffendersDeclaration()
+        {
+            Console.WriteLine(">> AI CANT CHOOSE DDEFENDERS ... YET! <<");
+            return new();
+        }
+
+        public List<Creature> SelectAttackers_AI(int[] indexes, bool isInputValid = false)
+        {
+            if (indexes[0] == -1)
+            {
+                Console.WriteLine("tym razem bez walki...");
+                return new(); // nie atakujemy wcale wartosc -1
+            }
+
+            if (isInputValid)
+            {
+                List<Creature> _attackersToDeclare = new();
+                foreach (int attacker in indexes)
+                {
+                    Creature attackingCreature = (Creature)CombatField[attacker];
+                    _attackersToDeclare.Add(attackingCreature);
+                    Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
+                }
+                return _attackersToDeclare;
+            }
+            else
+            {
+                List<Creature> availableTargets = Get_AvailableAttackers();
+
+                if (availableTargets.Count == 0)
+                    return new();
+
+                List<Creature> _attackersToDeclare = new();
+
+                foreach (int attacker in indexes)
+                {
+                    if (attacker > CombatField.Count - 1 || attacker < 0)
+                        continue;
+
+                    Creature attackingCreature = (Creature)CombatField[attacker];
+                    if (_attackersToDeclare.Contains(attackingCreature))
+                        continue;
+
+                    if (availableTargets.Contains(attackingCreature))
+                    {
+                        _attackersToDeclare.Add(attackingCreature);
+                        Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
+                    }
+
+                    continue;
+                }
+
+                return _attackersToDeclare;
+            }
+        }     
+    }   
+}   

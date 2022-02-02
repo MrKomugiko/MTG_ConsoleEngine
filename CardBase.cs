@@ -50,90 +50,93 @@ namespace MTG_ConsoleEngine
 
         public virtual (bool result, List<CardBase> landsToTap) CheckAvailability()
         {
-            var rand = new Random();
             Dictionary<string, int> SumManaOwnedAndAvailable = Owner.SumAvailableManaFromManaField();
             Dictionary<string, int> creatureManaCostCopy = new Dictionary<string, int>();
             List<CardBase> landCardsToTap = new List<CardBase>();
             var sumTotal = SumManaOwnedAndAvailable.Sum(x => x.Value);
             var currentLandsCardsCopy = Owner.ManaField.Where(c => c is Land && c.isTapped == false).ToList();
-            
+
             foreach (var orginalCost in ManaCost)
             {
                 creatureManaCostCopy.Add(key: orginalCost.Key, value: orginalCost.Value);
             }
 
-            // sprawdzanie pokolei posiadanych AKTYWNYCH kart landow
-            foreach (Land manaCard in currentLandsCardsCopy)
+            foreach (var cost in ManaCost.Where(x=>x.Key != ""))
             {
-                // brak wiecej kosztów
-                if (creatureManaCostCopy.Sum(x => x.Value) == 0) break;
-
-                // dopasowywanie kosztu z karty do wartosci z londu
-                foreach (KeyValuePair<string, int> cardCost in creatureManaCostCopy.Where(x=>manaCard.manaValue.Any(y=>y.Key == x.Key)))
+                if (SumManaOwnedAndAvailable.ContainsKey(cost.Key))
                 {
-                    if (cardCost.Value == 0) continue;
-                    //if (manaCard.manaValue.ContainsKey(cardCost.Key))
-                    //{
-                        // land jest tego samego typu co rodzaj kosztu
-                        if (manaCard.manaValue[cardCost.Key] >= cardCost.Value)
-                        {
-                            // karta landu ma wiekszą wartosc many niz wymanagany koszt
-                            // wystarczajaca+ ilosc zasowu, został jeszcze zapas a ten wymagany sie wyzerowal
-                            landCardsToTap.Add(manaCard);
-                            creatureManaCostCopy[cardCost.Key] = 0;
-
-                        }
-                        else
-                        {
-                            // odejmowanie od many bez koloru, bierzem pokolei wszystko co jest na liscie
-                            landCardsToTap.Add(manaCard);
-                            creatureManaCostCopy[cardCost.Key] -= manaCard.manaValue[cardCost.Key];
-                            // sprawdzenie czy to wsio
-                        }
-                   // }
-                }
-            }
-
-            // deal with no color cost value, random pick cards
-            landCardsToTap.ForEach(x => currentLandsCardsCopy.Remove(x));
-
-            var leftLandsCount = currentLandsCardsCopy.Count;
-            if (creatureManaCostCopy.ContainsKey(""))
-            {
-                if (creatureManaCostCopy[""] <= creatureManaCostCopy.Sum(x => x.Value))
-                {
-                    while (creatureManaCostCopy[""] > 0)
+                    if(SumManaOwnedAndAvailable[cost.Key] >= cost.Value)
                     {
-                        leftLandsCount = currentLandsCardsCopy.Count;
-                        if (leftLandsCount == 0)
+                        foreach(Land coreLand in currentLandsCardsCopy.Where(x=>((Land)x).manaValue.ContainsKey(cost.Key)))
                         {
-                            break;
-                        }
-
-                        var card = (Land)currentLandsCardsCopy[rand.Next(0, leftLandsCount)];
-                        if (card.manaValue.Sum(x => x.Value) >= creatureManaCostCopy[""])
-                        {
-                            landCardsToTap.Add(card);
-                            creatureManaCostCopy[""] = 0;
-                            currentLandsCardsCopy.Remove(card);
-                        }
-                        else
-                        {
-                            // wez wszystco co sie da xd
-                            landCardsToTap.Add(card);
-                            creatureManaCostCopy[""] -= card.manaValue.Sum(x => x.Value);
-                            currentLandsCardsCopy.Remove(card);
+                            if (creatureManaCostCopy[cost.Key] == 0) break;
+                            if(creatureManaCostCopy[cost.Key] > 0)
+                            {
+                                SumManaOwnedAndAvailable[cost.Key] -= coreLand.manaValue[cost.Key];
+                                creatureManaCostCopy[cost.Key] -= coreLand.manaValue[cost.Key];
+                                landCardsToTap.Add(coreLand);
+                                continue;
+                            }
                         }
                     }
+                    else
+                        return (false, new());
                 }
             }
 
-            // na koniec liczymy czy potrzebny koszt == 0;
-            if (creatureManaCostCopy.Sum(x => x.Value) == 0)
+            int clearColorValue;
+            creatureManaCostCopy.TryGetValue("", out clearColorValue);
+
+            if(creatureManaCostCopy.ContainsKey(""))
             {
-                return (true, landCardsToTap);
+                if(clearColorValue > 0)
+                {
+                    if(SumManaOwnedAndAvailable.Sum(x=>x.Value) >= clearColorValue)
+                    {
+                        Dictionary<string, int> creatureCoreMana = creatureManaCostCopy
+                            .Where(x => x.Key != "")
+                            .ToDictionary(x => x.Key, x => x.Value);
+                    
+                        var listaNoCoreLandow = currentLandsCardsCopy.Where(x=> ((Land)x).manaValue.Any(x=>creatureCoreMana.ContainsKey(x.Key) == false));
+                        if (listaNoCoreLandow.Sum(x => ((Land)x).manaValue.First().Value) >= clearColorValue)
+                        {
+                            foreach (Land noCoreLand in listaNoCoreLandow)
+                            {
+                                if (creatureManaCostCopy[""] == 0) break;
+
+                                SumManaOwnedAndAvailable[noCoreLand.manaValue.First().Key] -= noCoreLand.manaValue.First().Value;
+                                creatureManaCostCopy[""] -= noCoreLand.manaValue.First().Value;
+                                landCardsToTap.Add(noCoreLand);
+                            }
+                        }
+                        else
+                        {
+                            foreach (Land noCoreLand in listaNoCoreLandow)
+                            {
+                                if (creatureManaCostCopy[""] == 0) break;
+
+                                SumManaOwnedAndAvailable[noCoreLand.manaValue.First().Key] -= noCoreLand.manaValue.First().Value;
+                                creatureManaCostCopy[""] -= noCoreLand.manaValue.First().Value;
+                                landCardsToTap.Add(noCoreLand);
+                            }
+                            foreach (Land coreLand in currentLandsCardsCopy.Except(landCardsToTap))
+                            {
+                                if (creatureManaCostCopy[""] == 0) break;
+                                SumManaOwnedAndAvailable[coreLand.manaValue.First().Key] -= coreLand.manaValue.First().Value;
+                                creatureManaCostCopy[""] -= coreLand.manaValue.First().Value;
+                                landCardsToTap.Add(coreLand);
+                            }
+                        }
+                    }
+                    else
+                        return (false, new());
+                }
             }
-            return (false, new());
+
+            if (creatureManaCostCopy.Sum(x => x.Value) == 0)
+                return (true, landCardsToTap);
+            else
+                return (false, new());
         }
     }
 }

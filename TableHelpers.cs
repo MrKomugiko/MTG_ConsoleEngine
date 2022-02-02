@@ -30,7 +30,7 @@ namespace MTG_ConsoleEngine
                 if(_gameEngine.GetAttackerDeclaration().Contains(creature) == true)
                 {
                     alertInfo = " ATTACK INCOMMING! ";
-                }else if(_gameEngine.GetDeffendersDeclaration().ContainsValue(creature) == true)
+                }else if(_gameEngine.GetDeffendersDeclaration().ContainsKey(creature) == true)
                 {
                     alertInfo = "   ON DEFFENDING.  ";
                 }

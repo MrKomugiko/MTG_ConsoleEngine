@@ -8,7 +8,7 @@ namespace MTG_ConsoleEngine
         private List<Phase> GamePhases = new List<Phase>();
         public readonly Player[] Players = new Player[2];
         private PhaseType CurrentPhase { get; set; }
-        private List<Creature> DeclaredAttackers = new();
+        public List<Creature> DeclaredAttackers = new();
         public static Dictionary<Creature,Creature> DeclaredDeffenders = new(); // <obrońca / atakujacy> , bo mozna blokowac kilkoma stworkami
         private int TurnCounter = 0;
         public static int CurrentPlayerIndex = 0;
@@ -29,7 +29,7 @@ namespace MTG_ConsoleEngine
         }
         //public void SetAttackerDeclaration(List<Creature> _creaturesToDeclareAsAttacker) => DeclaredAttackers = _creaturesToDeclareAsAttacker;
         public List<Creature> GetAttackerDeclaration() => DeclaredAttackers;
-        public Dictionary<Creature,Creature> GetDeffendersDeclaration()=> DeclaredDeffenders;
+        public Dictionary<Creature,Creature> GetDeffendersDeclaration() => DeclaredDeffenders;
         
         public void Start()
         {
@@ -46,15 +46,23 @@ namespace MTG_ConsoleEngine
             {
                 foreach(var Phase in GamePhases)
                 {
-                    if(CurrentPlayerIndex == 1)
+                    if(Players[CurrentPlayerIndex].Health <= 0)
                     {
-                        AI_GetPossibleMoves(CurrentPlayerIndex, Phase.ToString());
+                        Console.WriteLine("End of Game:");
+                        Console.WriteLine("Player 1 HP:"+Players[0].Health);
+                        Console.WriteLine("Player 2 HP:"+Players[1].Health);
+
+
+                        Console.ReadLine();
                     }
                     Phase(Players[CurrentPlayerIndex]);
                 }
 
                 CurrentPlayerIndex = CurrentPlayerIndex==0?1:0;
                 TurnCounter++;
+                Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                Console.ReadLine();
             };
         }
 
@@ -71,7 +79,7 @@ namespace MTG_ConsoleEngine
             _player.ManaField.ForEach(card => card.isTapped = false);
 
             Console.WriteLine(" - Upkeep Step [Work In Progress]");
-            // Console.WriteLine("\t odpalenie akcji wykonujacych sie na początku tury gracza");
+            Console.WriteLine("\t odpalenie akcji wykonujacych sie na początku tury gracza");
             
             Console.WriteLine(" - Draw step [ DONE ]");
             if(TurnCounter >= 2)
@@ -85,11 +93,17 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
             Console.WriteLine($"║                            First_Main_Phase: Player {_player.PlayerNumberID}                          ║");
             Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
-            // Console.WriteLine("\t Cast spells, instants, play enchantments, play creatures");
-            // Console.WriteLine("enter card index to play with / enter to skip ");
-            Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
+
+            if (_player.IsAI)
+            {
+                _player.PlayRandomLandFromHand();
+                _player.MakePlaysWithRandomCardFromHand();
+                return;
+            }
+
             while(true)
             {
+                Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
                 handdata = _player.Get_and_DisplayPlayerHand();
                 
                 var input = Console.ReadLine()??"";
@@ -97,12 +111,18 @@ namespace MTG_ConsoleEngine
                 
                 int choosenIndex;
                 if(Int32.TryParse(input, out choosenIndex) == false) continue;
+                if(choosenIndex >= handdata.Count)
+                {
+                    Console.WriteLine("niewłasciwy index");
+                    continue;
+                }
+
                 if(handdata[choosenIndex].result == false)
                 {
                     Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
                 }
-                
+
                 if(_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                 {
                     Console.WriteLine("zapłąc za karte");
@@ -125,7 +145,7 @@ namespace MTG_ConsoleEngine
 
             if(_player.IsAI)
             {
-                /*_AI_*/
+                /*_AI_*/ // random attack sequention from available
                 List<Creature> availableTargets = _player.Get_AvailableAttackers();
                 List<int[]> randomIndexesList = _player.GetAllPossibleAttackCombinationsIndexes(availableTargets);
                 int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
@@ -139,17 +159,21 @@ namespace MTG_ConsoleEngine
 
             if (DeclaredAttackers.Count > 0)
             {   
-                AI_GetPossibleMoves(_player.Opponent.PlayerIndex, "DeclareBlockers");
-
                 Console.WriteLine(" - Declare Blockers Step - Player "+_player.Opponent.PlayerNumberID);  // drugi gracz
-                
+                if(_player.IsAI)
+                {
+                    DeclaredDeffenders = _player.RandomDeffendersDeclaration();
+                }
+                else
+                {
                 /* <DEFFENDER, ATTACKER> */ DeclaredDeffenders = _player.Opponent.SelectDeffenders_HumanInteraction();
+                }
+
             }
             Console.ResetColor();
 
             CastInstantIfCan(_player); // gracz zaczynajacy
             
-            AI_GetPossibleMoves(_player.Opponent.PlayerIndex, "Cast Instant");
             CastInstantIfCan(_player.Opponent); // przeciwnik
             
             ExecuteCombat();
@@ -172,7 +196,15 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
             //Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
             Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
-            while(true)
+
+            if (_player.IsAI)
+            {
+                _player.PlayRandomLandFromHand();
+                _player.MakePlaysWithRandomCardFromHand();
+                return;
+            }
+
+            while (true)
             {
                 handdata = _player.Get_and_DisplayPlayerHand();
                 
@@ -193,7 +225,6 @@ namespace MTG_ConsoleEngine
 
                 if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                 {
-                    Console.WriteLine("zapłąc za karte");
                     handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
                 }
             }
@@ -214,11 +245,8 @@ namespace MTG_ConsoleEngine
             Console.WriteLine(" - Cleanup step");
             Console.WriteLine("Sprawdzanie ilosci kart na ręce przeciwnika) - 7 max inaczej wyrzuć jakąś przed dostaniem kolejnej.");
             
-            AI_GetPossibleMoves(_player.PlayerNumberID == 1 ? 1 : 0, "Remove hand over limit.");
             HandCardsCleanUpCountChecker(Players[_player.PlayerNumberID == 1 ? 1 : 0]);
         }
-
- 
 
         private void ExecuteCombat()
         {
@@ -268,6 +296,12 @@ namespace MTG_ConsoleEngine
 
             while(_player.Hand.Count >= 7)
             {
+                if( _player.IsAI)
+                {
+                    _player.RemoveOneCardFromHand();
+                    continue;
+                }
+
                 _player.Get_and_DisplayPlayerHand();
                 Console.WriteLine($"Wyrzuć {_player.Hand.Count - 6} kart, podaj indexy 0,1,2..");
                 var cardsToRemove = Console.ReadLine();
@@ -279,6 +313,7 @@ namespace MTG_ConsoleEngine
                     cardsList.ForEach(x=>
                     {
                         Console.WriteLine("Wyrzuciłeś "+x.Name);
+                        _player.Graveyard.Add(x);
                         _player.Hand.Remove(x);
                     });
                 }
@@ -292,11 +327,19 @@ namespace MTG_ConsoleEngine
         {
             if (_player.Hand.Any(x => (x is Instant) && ((Instant)x).isAbleToPlay))
             {
-                Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {Players[_player.PlayerNumberID == 1 ? 1 : 0].PlayerNumberID}");
+                Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {_player.PlayerNumberID}");
                 Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");
+             
+                
                 Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
+                if(_player.IsAI)
+                {
+                    _player.PlayRandomInstatFromHand();
+                    return;
+                }
                 while (true)
                 {
+
                     handdata = _player.Get_and_DisplayPlayerHand();
 
                     var input = Console.ReadLine() ?? "";
@@ -339,15 +382,6 @@ namespace MTG_ConsoleEngine
                 corpse.Owner.Graveyard.Add(corpse);
                 corpse.Owner.CombatField.Remove(corpse);    
             }
-        }
-    
-    
-    
-         public void AI_GetPossibleMoves(int currentPlayerIndex, string title)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[AI] Sprawdzanie możliwych ruchów. dla "+title);
-            Console.ResetColor();
         }
      
         public List<object> GetValidTargetsForCardType(CardBase card)
