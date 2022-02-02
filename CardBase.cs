@@ -48,33 +48,32 @@ namespace MTG_ConsoleEngine
             return this.MemberwiseClone();
         }
 
-        internal virtual (bool result, List<CardBase> landsToTap) CheckAvailability()
+        public virtual (bool result, List<CardBase> landsToTap) CheckAvailability()
         {
+            var rand = new Random();
             Dictionary<string, int> SumManaOwnedAndAvailable = Owner.SumAvailableManaFromManaField();
-
             Dictionary<string, int> creatureManaCostCopy = new Dictionary<string, int>();
+            List<CardBase> landCardsToTap = new List<CardBase>();
+            var sumTotal = SumManaOwnedAndAvailable.Sum(x => x.Value);
+            var currentLandsCardsCopy = Owner.ManaField.Where(c => c is Land && c.isTapped == false).ToList();
             
             foreach (var orginalCost in ManaCost)
             {
                 creatureManaCostCopy.Add(key: orginalCost.Key, value: orginalCost.Value);
             }
 
-            var sumTotal = SumManaOwnedAndAvailable.Sum(x => x.Value);
-
-            var currentLandsCardsCopy = Owner.ManaField.Where(c => c is Land && c.isTapped == false).ToList();
-
-            List<CardBase> landCardsToTap = new List<CardBase>();
             // sprawdzanie pokolei posiadanych AKTYWNYCH kart landow
             foreach (Land manaCard in currentLandsCardsCopy)
             {
+                // brak wiecej kosztów
                 if (creatureManaCostCopy.Sum(x => x.Value) == 0) break;
 
                 // dopasowywanie kosztu z karty do wartosci z londu
-                foreach (KeyValuePair<string, int> cardCost in creatureManaCostCopy)
+                foreach (KeyValuePair<string, int> cardCost in creatureManaCostCopy.Where(x=>manaCard.manaValue.Any(y=>y.Key == x.Key)))
                 {
                     if (cardCost.Value == 0) continue;
-                    if (manaCard.manaValue.ContainsKey(cardCost.Key))
-                    {
+                    //if (manaCard.manaValue.ContainsKey(cardCost.Key))
+                    //{
                         // land jest tego samego typu co rodzaj kosztu
                         if (manaCard.manaValue[cardCost.Key] >= cardCost.Value)
                         {
@@ -91,11 +90,10 @@ namespace MTG_ConsoleEngine
                             creatureManaCostCopy[cardCost.Key] -= manaCard.manaValue[cardCost.Key];
                             // sprawdzenie czy to wsio
                         }
-                    }
+                   // }
                 }
             }
 
-            var rand = new Random();
             // deal with no color cost value, random pick cards
             landCardsToTap.ForEach(x => currentLandsCardsCopy.Remove(x));
 

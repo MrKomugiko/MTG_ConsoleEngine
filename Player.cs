@@ -229,7 +229,7 @@ namespace MTG_ConsoleEngine
             
             return InputHelper.Input_DefendersDeclaration(_gameEngine, DeclaredAttackers, availableDeffenders, PlayerIndex /* index */);
         }
-        public void PlayCardFromHand(CardBase card, List<CardBase> landToPayCost)
+        public bool PlayCardFromHand(CardBase card)
         {
             Console.ForegroundColor = color;
             Console.WriteLine($"Gracz 1 zagrywa kartą {card.Name}");
@@ -254,7 +254,7 @@ namespace MTG_ConsoleEngine
                     if(e.UseOn == "Creature")   
                     {
                         List<object> availableTargets2 = _gameEngine.GetValidTargetsForCardType(e);
-                        if(availableTargets2.Count == 0) return;
+                        if(availableTargets2.Count == 0) return false;
 
                         Console.WriteLine($"[{(this.PlayerIndex)}] => Your Combat field Cards:");
                         this.DisplayPlayerField();
@@ -267,7 +267,7 @@ namespace MTG_ConsoleEngine
                         }
                         else {
                             Console.WriteLine("anuluj, skip");
-                            return;
+                            return false;
                         }
                     }
                     else
@@ -281,7 +281,7 @@ namespace MTG_ConsoleEngine
                 case Instant i:
                     List<object> availableTargets = _gameEngine.GetValidTargetsForCardType(i);
 
-                    if(availableTargets.Count == 0) return;
+                    if(availableTargets.Count == 0) return false;
 
                     Console.WriteLine($"[{this.PlayerIndex}] => Your Combat field Cards:");
                     this.DisplayPlayerField();
@@ -297,15 +297,15 @@ namespace MTG_ConsoleEngine
                     else 
                     {
                         Console.WriteLine("anuluj, skip");
-                        return;
+                        return false;
                     }
                     
                     break;
             }
 
             Hand.Remove(card);
-            landToPayCost.ForEach(land=>((Land)land).isTapped = true);
             Console.ResetColor();
+            return true;
         }
         public void DisplayPlayerField() => TableHelpers.DisplayFieldTable(_gameEngine, color, CombatField, PlayerNumberID);
         public Dictionary<int,(bool result,List<CardBase> landsToTap)> Get_and_DisplayPlayerHand()

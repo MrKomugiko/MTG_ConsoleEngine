@@ -62,7 +62,7 @@ namespace MTG_ConsoleEngine.Card_Category
         {
             return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ {"".PadLeft(13)}";
         }
-        internal override (bool result, List<CardBase> landsToTap) CheckAvailability()
+        public override (bool result, List<CardBase> landsToTap) CheckAvailability()
         {
             if(Owner.IsLandPlayedThisTurn)
                 return (false, new());

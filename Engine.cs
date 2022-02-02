@@ -96,18 +96,18 @@ namespace MTG_ConsoleEngine
                 if(String.IsNullOrEmpty(input)) break;
                 
                 int choosenIndex;
-                if(Int32.TryParse(input, out choosenIndex) == false) 
-                {
-                    
-                    continue;
-                }
-                if(handdata[Int32.Parse(input)].result == false)
+                if(Int32.TryParse(input, out choosenIndex) == false) continue;
+                if(handdata[choosenIndex].result == false)
                 {
                     Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
                 }
                 
-                _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
+                if(_player.PlayCardFromHand(_player.Hand[choosenIndex]))
+                {
+                    Console.WriteLine("zapłąc za karte");
+                    handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
+                }
             }
         }
 
@@ -190,8 +190,12 @@ namespace MTG_ConsoleEngine
                     Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
                 }
-                
-                _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
+
+                if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
+                {
+                    Console.WriteLine("zapłąc za karte");
+                    handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
+                }
             }
         }
         public void End_Phase(Player _player)
@@ -315,7 +319,11 @@ namespace MTG_ConsoleEngine
                         continue;
                     }
 
-                    _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
+                    if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
+                    {
+                        Console.WriteLine("zapłąc za karte");
+                        handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
+                    }
                 }
             }
         }
