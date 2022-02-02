@@ -27,7 +27,7 @@ namespace MTG_ConsoleEngine
             Players[1]._gameEngine = this;
 
         }
-        public void SetAttackerDeclaration(List<Creature> _creaturesToDeclareAsAttacker) => DeclaredAttackers = _creaturesToDeclareAsAttacker;
+        //public void SetAttackerDeclaration(List<Creature> _creaturesToDeclareAsAttacker) => DeclaredAttackers = _creaturesToDeclareAsAttacker;
         public List<Creature> GetAttackerDeclaration() => DeclaredAttackers;
         public Dictionary<Creature,Creature> GetDeffendersDeclaration()=> DeclaredDeffenders;
         
@@ -103,13 +103,15 @@ namespace MTG_ConsoleEngine
                 }
                 if(handdata[Int32.Parse(input)].result == false)
                 {
-                    Console.WriteLine("nie mozesz zagrać tej karty i/lub nie stac cie");
+                    Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
                 }
                 
                 _player.PlayCardFromHand(_player.Hand[Int32.Parse(input)], handdata[Int32.Parse(input)].landsToTap);
             }
         }
+
+        Random rand = new Random();
         public void Combat_Phase(Player _player)
         {
             CurrentPhase = PhaseType.Combat_Phase;
@@ -120,7 +122,20 @@ namespace MTG_ConsoleEngine
 
             Console.WriteLine(" - Declare Attackers"); // playerID
             //List<Creature> availableAttackers = _player.Get_AvailableAttackers();
-            DeclaredAttackers = _player.SelectAttackers_HumanInteraction();
+
+            if(_player.IsAI)
+            {
+                /*_AI_*/
+                List<Creature> availableTargets = _player.Get_AvailableAttackers();
+                List<int[]> randomIndexesList = _player.GetAllPossibleAttackCombinationsIndexes(availableTargets);
+                int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
+                
+                DeclaredAttackers = _player.SelectAttackers_AI(inputArr, true);
+            }
+            else
+            {
+                DeclaredAttackers = _player.SelectAttackers_HumanInteraction();
+            }
 
             if (DeclaredAttackers.Count > 0)
             {   
@@ -172,7 +187,7 @@ namespace MTG_ConsoleEngine
                 }
                 if(handdata[Int32.Parse(input)].result == false)
                 {
-                    Console.WriteLine("nie mozesz zagrać tej karty i/lub nie stac cie");
+                    Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
                 }
                 
@@ -198,8 +213,9 @@ namespace MTG_ConsoleEngine
             AI_GetPossibleMoves(_player.PlayerNumberID == 1 ? 1 : 0, "Remove hand over limit.");
             HandCardsCleanUpCountChecker(Players[_player.PlayerNumberID == 1 ? 1 : 0]);
         }
-        
-        
+
+ 
+
         private void ExecuteCombat()
         {
             foreach(var attacker in DeclaredAttackers) /* <DEFFENDER, ATTACKER> */
@@ -289,7 +305,7 @@ namespace MTG_ConsoleEngine
                     }
                     if (handdata[choosenIndex].result == false)
                     {
-                        Console.WriteLine("nie mozesz zagrać tej karty i/lub nie stac cie");
+                        Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                         continue;
                     }
 

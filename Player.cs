@@ -2,8 +2,9 @@ using MTG_ConsoleEngine.Card_Category;
 
 namespace MTG_ConsoleEngine
 {
-    public class Player
+    public partial class Player
     {
+        public readonly bool IsAI = false;
         public Engine _gameEngine;
         public Player Opponent;
 
@@ -21,8 +22,9 @@ namespace MTG_ConsoleEngine
         public bool IsLandPlayedThisTurn { get; internal set; }
 
         
-        public Player(int _number, int _health) 
+        public Player(int _number, int _health, bool _isAI = false) 
         {
+            this.IsAI = _isAI;
             this.PlayerNumberID = _number;
             this.PlayerIndex = _number==1?0:1;
 
@@ -71,18 +73,18 @@ namespace MTG_ConsoleEngine
             Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
             Console.ResetColor();
         }
-        private List<Creature> Get_AvailableAttackers() {
+        public List<Creature> Get_AvailableAttackers() {
 
             var possibleAttackers = CombatField.Where(x=> x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
             if(possibleAttackers.Count == 0) {
                 Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
                 return new();
             }
-            Console.WriteLine("dostępne kreatury do ataku: "); 
-            possibleAttackers.ForEach(x => 
+            Console.WriteLine("dostępne kreatury do ataku: ");
+            possibleAttackers.ForEach(x =>
                     Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
                 );
-            
+
             return possibleAttackers;
         } 
         private List<Creature> Get_AvailableDeffenders() {
@@ -95,7 +97,60 @@ namespace MTG_ConsoleEngine
             );
             return possibleDefenders;
 
-        } 
+        }
+
+        
+
+        public List<Creature> SelectAttackers_AI(int[] indexes, bool isInputValid = false)
+        {
+            if(indexes[0] == -1)
+            {
+                Console.WriteLine("tym razem bez walki...");
+                return new(); // nie atakujemy wcale wartosc -1
+            }
+
+            if(isInputValid)
+            {
+                List<Creature> _attackersToDeclare = new();
+                foreach (int attacker in indexes)
+                {
+                    Creature attackingCreature = (Creature)CombatField[attacker];
+                    _attackersToDeclare.Add(attackingCreature);
+                    Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
+                }
+                return _attackersToDeclare;
+            }
+            else
+            {
+
+            List<Creature> availableTargets = Get_AvailableAttackers();
+
+            if (availableTargets.Count == 0) 
+                return new();
+
+            List<Creature> _attackersToDeclare = new();
+
+            foreach (int attacker in indexes)
+            {
+               if (attacker > CombatField.Count - 1 || attacker < 0) 
+                    continue;
+                    
+                Creature attackingCreature = (Creature)CombatField[attacker];
+                if (_attackersToDeclare.Contains(attackingCreature)) 
+                    continue;
+
+                if (availableTargets.Contains(attackingCreature))
+                    {
+                        _attackersToDeclare.Add(attackingCreature);
+                        Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
+                    }
+                
+                continue;
+            }
+
+            return _attackersToDeclare;
+            }
+        }
         public List<Creature> SelectAttackers_HumanInteraction()
         {
             TryAgain:
