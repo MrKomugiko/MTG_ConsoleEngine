@@ -76,55 +76,62 @@ namespace MTG_ConsoleEngine
             trimmedArr.Add(new int[1] { -1 });
             return trimmedArr;
         }
-        public void RemoveOneCardFromHand()
+        public void AI_RemoveOneCardFromHand()
         {
             /*_AI_*/ // remove one random card if total holding > 7
             int randomIndexToRemove = rand.Next(1, this.Hand.Count);
             CardBase card = this.Hand[randomIndexToRemove];
-            Console.WriteLine("LOSOWO! Wyrzuciłeś " + card.Name);
+            //Console.WriteLine("LOSOWO! Wyrzuciłeś " + card.Name);
             this.Graveyard.Add(card);
             this.Hand.Remove(card);
         }
-        public void PlayRandomLandFromHand()
+        public void AI_PlayLandCardIfPossible()
         {
             /*_AI_*/ // auto pick land if possible
-            CardBase firstLandFromHAnd = this.Hand.FirstOrDefault(x => x is Land);
-            if (firstLandFromHAnd != null)
+            CardBase firstLandFromHAnd = this.Hand.FirstOrDefault(x => x is Land );
+            if (firstLandFromHAnd != null && IsLandPlayedThisTurn == false)
             {
-                Console.WriteLine("Auto place Land");
+                //Console.WriteLine("Auto place Land");
                 this.PlayCardFromHand(firstLandFromHAnd);
             }
         }
-        public void PlayRandomInstatFromHand()
+        public void AI_PlayRandomInstatFromHand()
         {
             /*_AI_*/ // random pick instant if can
-            Console.WriteLine("IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI");
+            //Console.WriteLine($"IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI:Player_{this.PlayerNumberID} \n >> AI CANT CHOOSE INTANTS ... YET! <<");
 
-            while(true)
+            if (this.Hand.Any(x => (x is Instant) && ((Instant)x).isAbleToPlay))
             {
-                List<Instant> availableInstants = this.Hand.Where(x => x is Instant && x.isAbleToPlay)
-                        .Select(x=>(Instant)x).ToList();
-                Console.WriteLine("lista mozliwych akcji");
-                foreach (Instant card in availableInstants)
+                //Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {this.PlayerNumberID}");
+                //Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");
+
+                while (true)
                 {
-                    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}]");
+                    List<Instant> availableInstants = this.Hand.Where(x => x is Instant && x.isAbleToPlay)
+                            .Select(x => (Instant)x).ToList();
+                    //Console.WriteLine("lista mozliwych akcji");
+                    //foreach (Instant card in availableInstants)
+                    //{
+                    //    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}]");
+                    //}
+
+                    if (availableInstants.Count() == 0) break;
+
+                    //TODO: wybieranie skila jakos xd
+                    // sprawdzanie czy jest jakis powod do uzywania instanta xd 
+                    //  ewentualknie dodac narazie losowy, bedzie dzialac przy 1 intancie 
+                    //  gorzej gdy bedziie kilka opcji ... hmm
+                   // Console.WriteLine(">> AI CANT CHOOSE INSTANTS YET! <<");
+                    break;
                 }
-
-                if (availableInstants.Count() == 0) break;
-
-                //TODO: wybieranie skila jakos xd
-                // sprawdzanie czy jest jakis powod do uzywania instanta xd 
-                //  ewentualknie dodac narazie losowy, bedzie dzialac przy 1 intancie 
-                //  gorzej gdy bedziie kilka opcji ... hmm
-                Console.WriteLine(">> AI CANT CHOOSE INSTANTS YET! <<");
-                break;
             }
 
         }
 
-        public void MakePlaysWithRandomCardFromHand()
+        public void AI_MakePlaysWithRandomCardFromHand()
         {
-            Console.WriteLine("IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI");
+            
+            //Console.WriteLine($"IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI:Player_{this.PlayerNumberID} \n zagraj losową kartą z ręki -> hard coded only creatures");
             // hard coded play creature if can
             while (true)
             {
@@ -133,51 +140,54 @@ namespace MTG_ConsoleEngine
 
                 List<CardBase> randomPlays = this.Hand.Where(card => card.isAbleToPlay).ToList();
                 var creaturesOnly = randomPlays.Where(c => c is Creature).ToList();
-                Console.WriteLine("lista mozliwych akcji");
-                foreach (CardBase card in randomPlays)
-                {
-                    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}] {((card is Creature)?"<---":"")}");
-                }
+                //Console.WriteLine("lista mozliwych akcji");
+                //foreach (CardBase card in randomPlays)
+                //{
+                //    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}] {((card is Creature)?"<---":"")}");
+                //}
 
                 if (creaturesOnly.Count() == 0) break;
                 CardBase randomCreatureFromHand = creaturesOnly[rand.Next(0, creaturesOnly.Count())];
                 this.PlayCardFromHand(randomCreatureFromHand);
             }
         }
-        public void RandomAttackDeclaration()
+        public void AI_RandomAttackDeclaration()
         {
             /*_AI_*/ // random attack sequention from available
+
             List<Creature> availableTargets = this.Get_AvailableAttackers();
             List<int[]> randomIndexesList = this.GetAllPossibleAttackCombinationsIndexes(availableTargets);
             int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
 
-            _gameEngine.DeclaredAttackers = this.SelectAttackers_AI(inputArr, true);
+            _gameEngine.DeclaredAttackers = this.GetCreaturesFromField(inputArr);
+            Console.WriteLine($">>>>>> Attackers declared by Player {PlayerNumberID}: "+String.Join("\n- ", _gameEngine.DeclaredAttackers.Select(x=>x.Name)));
         }
-        public Dictionary<Creature,Creature> RandomDeffendersDeclaration()
+        public Dictionary<Creature,Creature> AI_RandomDeffendersDeclaration()
         {
-            Console.WriteLine(">> AI CANT CHOOSE DDEFENDERS ... YET! <<");
+            Console.WriteLine(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
             return new();
         }
 
-        public List<Creature> SelectAttackers_AI(int[] indexes, bool isInputValid = false)
+        public List<Creature> GetCreaturesFromField(int[] indexes, bool validated = false)
         {
+            indexes = indexes.Distinct().ToArray();
             if (indexes[0] == -1)
             {
-                Console.WriteLine("tym razem bez walki...");
+               // Console.WriteLine(" [-1] / tym razem bez walki...");
                 return new(); // nie atakujemy wcale wartosc -1
             }
-
-            if (isInputValid)
+                
+            if(validated == true)
             {
                 List<Creature> _attackersToDeclare = new();
                 foreach (int attacker in indexes)
                 {
                     Creature attackingCreature = (Creature)CombatField[attacker];
                     _attackersToDeclare.Add(attackingCreature);
-                    Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
+                   // Console.WriteLine("dodano do rejestracji :" + attackingCreature.Name);
                 }
                 return _attackersToDeclare;
-            }
+                }
             else
             {
                 List<Creature> availableTargets = Get_AvailableAttackers();
@@ -199,7 +209,7 @@ namespace MTG_ConsoleEngine
                     if (availableTargets.Contains(attackingCreature))
                     {
                         _attackersToDeclare.Add(attackingCreature);
-                        Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
+                        //Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
                     }
 
                     continue;
@@ -207,6 +217,6 @@ namespace MTG_ConsoleEngine
 
                 return _attackersToDeclare;
             }
-        }     
+        }
     }   
 }   

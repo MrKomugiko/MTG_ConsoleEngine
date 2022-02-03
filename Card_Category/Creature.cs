@@ -58,8 +58,6 @@ namespace MTG_ConsoleEngine.Card_Category
             set
             {
                 _isTapped = value;
-                if (value == true)
-                    Console.WriteLine($"Karta {Name} została tapnięta.");
             }
         }
         public List<string> Perks { get; internal set; } = new List<string>();
@@ -182,6 +180,17 @@ namespace MTG_ConsoleEngine.Card_Category
 
             UseSpecialAction(ActionType.Attack);
             isTapped = true;
+        }
+
+        public void ResetStatsAfterFight()
+        {
+            CurrentHealth = BaseHealth;
+            CurrentAttack = BaseAttack;
+        }
+        public void RevieweResetToDefault()
+        {
+            CurrentHealth = CoreHealth;
+            CurrentAttack = CoreAttack;
         }
     }
 }

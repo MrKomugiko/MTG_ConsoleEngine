@@ -9,7 +9,7 @@ namespace MTG_ConsoleEngine
         }
         public static void PlayLandCard(int value, string colorCode, Player owner)
         {
-            Console.WriteLine("dodano karte many do puli ManaField`u");
+            //Console.WriteLine("dodano karte many do puli ManaField`u");
             
             owner.IsLandPlayedThisTurn = true;
         }

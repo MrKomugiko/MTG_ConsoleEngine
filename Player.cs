@@ -59,7 +59,7 @@ namespace MTG_ConsoleEngine
             //Console.WriteLine($"Aktualne HP: {Health}");
             Console.ResetColor();
         }
-        internal void AddToDeck(CardBase _card)
+        public void AddToDeck(CardBase _card)
         {
             _card.Owner = this;
             Deck.Add(_card);
@@ -70,20 +70,21 @@ namespace MTG_ConsoleEngine
             var newCard = Deck.First();
             Deck.Remove(newCard);
             Hand.Add(newCard);
-            Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
+         
+            //Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
             Console.ResetColor();
         }
         public List<Creature> Get_AvailableAttackers() {
 
             var possibleAttackers = CombatField.Where(x=> x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
             if(possibleAttackers.Count == 0) {
-                Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
+                //Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
                 return new();
             }
-            Console.WriteLine("dostępne kreatury do ataku: ");
-            possibleAttackers.ForEach(x =>
-                    Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
-                );
+            //Console.WriteLine("dostępne kreatury do ataku: ");
+            //possibleAttackers.ForEach(x =>
+            //        Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
+            //    );
 
             return possibleAttackers;
         } 
@@ -116,7 +117,7 @@ namespace MTG_ConsoleEngine
             List<string> attackers = input.Trim().Split(",").ToList();
             
             List<Creature> _attackersToDeclare = new();
-            
+            List<int> validIndexes = new();
             int attackIndex;
             foreach(var attacker in attackers)
             {
@@ -130,12 +131,10 @@ namespace MTG_ConsoleEngine
                     Creature attackingCreature = (Creature)CombatField[attackIndex];
                     if(availableTargets.Contains(attackingCreature))
                     {
-                        _attackersToDeclare.Add(attackingCreature);
-                        Console.WriteLine("dodano do atakujacych: "+attackingCreature.Name);
+                        validIndexes.Add(attackIndex);
                     }
                     else
                     {
-                        if(_attackersToDeclare.Contains(attackingCreature)) _attackersToDeclare.Remove(attackingCreature); // TODO: raczej nie potrzebne w tym miejscu
                         Console.WriteLine($"pominieto, {attackingCreature.Name} nie moze teraz walczyć");
                         continue;
                     }
@@ -149,8 +148,9 @@ namespace MTG_ConsoleEngine
                 }
             }
         
-            return _attackersToDeclare;
+            return GetCreaturesFromField(validIndexes.ToArray(),false);
         }
+
         public Dictionary<Creature,Creature> SelectDeffenders_HumanInteraction()
         {
             Console.WriteLine("Nadchodzący Atak:");
@@ -178,7 +178,7 @@ namespace MTG_ConsoleEngine
         public bool PlayCardFromHand(CardBase card)
         {
             Console.ForegroundColor = color;
-            Console.WriteLine($"Gracz 1 zagrywa kartą {card.Name}");
+            Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
             (bool status, int playerIndex, int creatureIndex) playerResponse = (false,-1,-1);
             switch(card)
             {
@@ -192,6 +192,7 @@ namespace MTG_ConsoleEngine
                     break;
 
                 case Land:
+                    if (IsLandPlayedThisTurn == true) return false;
                     ManaField.Add(card);
                     card.UseSpecialAction(ActionType.Play);
                     break;
@@ -248,7 +249,7 @@ namespace MTG_ConsoleEngine
                     
                     break;
             }
-            Console.WriteLine("zapłąc za karte / usun ją z ręki");
+            //Console.WriteLine("zapłąc za karte / usun ją z ręki");
             card.CheckAvailability().landsToTap.ForEach(c => c.isTapped = true);
             Hand.Remove(card);
             Console.ResetColor();

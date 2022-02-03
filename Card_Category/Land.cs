@@ -6,8 +6,8 @@ namespace MTG_ConsoleEngine.Card_Category
             get => _isTapped; 
             set {
                 _isTapped = value;
-                 if(value == true)
-                    Console.WriteLine($"Land {this.Name} została tapnięta.");
+                 //if(value == true)
+                 //   Console.WriteLine($"Land {this.Name} została tapnięta.");
             }
         }
         private bool _isTapped;

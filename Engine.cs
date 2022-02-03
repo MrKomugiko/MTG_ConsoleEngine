@@ -5,16 +5,32 @@ namespace MTG_ConsoleEngine
     public partial class Engine
     {
         private delegate void Phase(Player _player);
-        private List<Phase> GamePhases = new List<Phase>();
+        private List<Phase> GamePhases = new();
+
         public readonly Player[] Players = new Player[2];
-        private PhaseType CurrentPhase { get; set; }
+        public PhaseType CurrentPhase { get; set; }
         public List<Creature> DeclaredAttackers = new();
-        public static Dictionary<Creature,Creature> DeclaredDeffenders = new(); // <obrońca / atakujacy> , bo mozna blokowac kilkoma stworkami
+        public Dictionary<Creature,Creature> DeclaredDeffenders = new(); // <obrońca / atakujacy> , bo mozna blokowac kilkoma stworkami
         private int TurnCounter = 0;
-        public static int CurrentPlayerIndex = 0;
-        
+        public int CurrentPlayerIndex = 0;
+        public bool logs = true;
         public Engine(Player FirstPlayer, Player SecondPlayer)
         {
+            /*
+                StartNewGame = 0,
+                Beginning_Phase = 1,
+                First_Main_Phase = 2,
+                Combat_Phase_Begining = 3,
+                Combat_Phase_AttackersDeclaration = 4,
+                Combat_Phase_DefendersDeclaration = 5,
+                Combat_Phase_AttackerInstants = 6,
+                Combat_Phase_DeffenderInstants = 7,
+                Combat_Phase_Combat = 8,
+                Combat_Phase_End = 9,
+                Second_Main_Phase = 10,
+                End_Phase = 11
+             */
+
             GamePhases.Add(Beginning_Phase);
             GamePhases.Add(First_Main_Phase);
             GamePhases.Add(Combat_Phase);
@@ -27,12 +43,14 @@ namespace MTG_ConsoleEngine
             Players[1]._gameEngine = this;
 
         }
-        //public void SetAttackerDeclaration(List<Creature> _creaturesToDeclareAsAttacker) => DeclaredAttackers = _creaturesToDeclareAsAttacker;
+
         public List<Creature> GetAttackerDeclaration() => DeclaredAttackers;
         public Dictionary<Creature,Creature> GetDeffendersDeclaration() => DeclaredDeffenders;
         
         public void Start()
         {
+            #region StartNewGame
+            CurrentPhase = PhaseType.StartNewGame;
             ShuffleDeck(Players[0]);
             ShuffleDeck(Players[1]);
 
@@ -42,62 +60,82 @@ namespace MTG_ConsoleEngine
             TurnCounter = 0;
             CurrentPlayerIndex = 0;
 
-            while(true)
+            #endregion
+
+            bool gameEnded = false;
+            RunGameLoop(ref gameEnded);
+        }
+
+        public void RunGameLoop(ref bool gameEnded)
+        {
+            while (true)
             {
-                foreach(var Phase in GamePhases)
+                foreach (var Phase in GamePhases)
                 {
-                    if(Players[CurrentPlayerIndex].Health <= 0)
+                    if (Players[CurrentPlayerIndex].Health <= 0)
                     {
                         Console.WriteLine("End of Game:");
-                        Console.WriteLine("Player 1 HP:"+Players[0].Health);
-                        Console.WriteLine("Player 2 HP:"+Players[1].Health);
-
-
-                        Console.ReadLine();
+                        Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                        Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                        gameEnded = true;
+                        return;
+                       
                     }
                     Phase(Players[CurrentPlayerIndex]);
                 }
 
-                CurrentPlayerIndex = CurrentPlayerIndex==0?1:0;
+                CurrentPlayerIndex = CurrentPlayerIndex == 0 ? 1 : 0;
                 TurnCounter++;
-                Console.WriteLine("Player 1 HP:" + Players[0].Health);
-                Console.WriteLine("Player 2 HP:" + Players[1].Health);
-                Console.ReadLine();
+                Console.WriteLine("Turn: " + TurnCounter);
+                if(logs)
+                {
+                    Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                    Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                }
             };
         }
 
-
         public void Beginning_Phase(Player _player)
-        {   
+        {
+            #region Begining_Phase
             CurrentPhase = PhaseType.Beginning_Phase;
-            Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine($"║    {("[Turn:"+TurnCounter+"]").PadRight(11)}             Beginning_Phase: Player {_player.PlayerNumberID}                           ║");
-            Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
+            if(logs)
+            {
+                Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
+                Console.WriteLine($"║    {("[Turn:"+TurnCounter+"]").PadRight(11)}             Beginning_Phase: Player {_player.PlayerNumberID}                           ║");
+                Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
 
-            Console.WriteLine(" - Untap Step [ DONE ]");
+                Console.WriteLine(" - Untap Step [ DONE ]");
+            }
             _player.CombatField.ForEach(card => card.isTapped = false);
             _player.ManaField.ForEach(card => card.isTapped = false);
+            if (logs)
+            {
+                Console.WriteLine(" - Upkeep Step [Work In Progress]");
+                Console.WriteLine("\t odpalenie akcji wykonujacych sie na początku tury gracza");
+                Console.WriteLine(" - Draw step [ DONE ]");
+            }
 
-            Console.WriteLine(" - Upkeep Step [Work In Progress]");
-            Console.WriteLine("\t odpalenie akcji wykonujacych sie na początku tury gracza");
-            
-            Console.WriteLine(" - Draw step [ DONE ]");
             if(TurnCounter >= 2)
             {
                 _player.DrawCard();
             }
+            #endregion
         }
         public void First_Main_Phase(Player _player)
         {
+            #region First_Main_Phase
             CurrentPhase = PhaseType.First_Main_Phase;
-            Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine($"║                            First_Main_Phase: Player {_player.PlayerNumberID}                          ║");
-            Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
-
+            if (logs)
+            {
+                Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
+                Console.WriteLine($"║                            First_Main_Phase: Player {_player.PlayerNumberID}                          ║");
+                Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
+            }
             if (_player.IsAI)
             {
-                _player.PlayRandomLandFromHand();
-                _player.MakePlaysWithRandomCardFromHand();
+                _player.AI_PlayLandCardIfPossible();
+                _player.AI_MakePlaysWithRandomCardFromHand();
                 return;
             }
 
@@ -129,40 +167,44 @@ namespace MTG_ConsoleEngine
                     handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
                 }
             }
+            #endregion
         }
 
-        Random rand = new Random();
         public void Combat_Phase(Player _player)
         {
-            CurrentPhase = PhaseType.Combat_Phase;
-            Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine($"║                              Combat_Phase: Player {_player.PlayerNumberID}                            ║");
-            Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
-            Console.WriteLine(" - Beginning of Combat Step");
-
-            Console.WriteLine(" - Declare Attackers"); // playerID
-            //List<Creature> availableAttackers = _player.Get_AvailableAttackers();
-
-            if(_player.IsAI)
+            #region Combat_Phase_Begining
+            CurrentPhase = PhaseType.Combat_Phase_Begining;
+            if (logs)
             {
-                /*_AI_*/ // random attack sequention from available
-                List<Creature> availableTargets = _player.Get_AvailableAttackers();
-                List<int[]> randomIndexesList = _player.GetAllPossibleAttackCombinationsIndexes(availableTargets);
-                int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
-                
-                DeclaredAttackers = _player.SelectAttackers_AI(inputArr, true);
+                Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
+                Console.WriteLine($"║                              Combat_Phase: Player {_player.PlayerNumberID}                            ║");
+                Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
+                Console.WriteLine(" - Beginning of Combat Step");
+
+                Console.WriteLine(" - Declare Attackers"); // playerID
+            }                                       //List<Creature> availableAttackers = _player.Get_AvailableAttackers();
+            #endregion
+
+            #region Combat_Phase_AttackersDeclaration
+            CurrentPhase = PhaseType.Combat_Phase_AttackersDeclaration;
+            if (_player.IsAI)
+            {
+                _player.AI_RandomAttackDeclaration();
             }
             else
             {
                 DeclaredAttackers = _player.SelectAttackers_HumanInteraction();
             }
+            #endregion
 
+            #region Combat_Phase_DeffendersDeclaration
+            CurrentPhase = PhaseType.Combat_Phase_DefendersDeclaration;
             if (DeclaredAttackers.Count > 0)
             {   
-                Console.WriteLine(" - Declare Blockers Step - Player "+_player.Opponent.PlayerNumberID);  // drugi gracz
-                if(_player.IsAI)
+                //Console.WriteLine(" - Declare Blockers Step - Player "+_player.Opponent.PlayerNumberID);  // drugi gracz
+                if(_player.Opponent.IsAI)
                 {
-                    DeclaredDeffenders = _player.RandomDeffendersDeclaration();
+                    DeclaredDeffenders = _player.AI_RandomDeffendersDeclaration();
                 }
                 else
                 {
@@ -171,36 +213,73 @@ namespace MTG_ConsoleEngine
 
             }
             Console.ResetColor();
+            #endregion
 
-            CastInstantIfCan(_player); // gracz zaczynajacy
-            
-            CastInstantIfCan(_player.Opponent); // przeciwnik
-            
+            #region Combat_Phase_AttackerInstants
+            CurrentPhase = PhaseType.Combat_Phase_AttackerInstants;
+            if (_player.IsAI)
+            {
+                _player.AI_PlayRandomInstatFromHand();
+            }
+            else
+            {
+                CastInstantIfCan(_player); // gracz zaczynajacy
+            }
+            #endregion
+
+            #region Combat_Phase_DeffenderInstants
+            CurrentPhase = PhaseType.Combat_Phase_DeffenderInstants;
+            if (_player.Opponent.IsAI)
+            {
+                _player.Opponent.AI_PlayRandomInstatFromHand();
+            }
+            else
+            {
+                CastInstantIfCan(_player.Opponent); // gracz zaczynajacy
+            }
+            #endregion
+
+            #region Combat_Phase_Combat
+            CurrentPhase = PhaseType.Combat_Phase_Combat;
             ExecuteCombat();
            
             DeclaredAttackers.Clear();
             DeclaredDeffenders.Clear();
 
             // ewentualne wyłączenie enczantow 
-            Console.WriteLine("Przenoszenie zniszczonych jednostek na cmentarz");
+            if (logs)
+            {
+                Console.WriteLine("Przenoszenie zniszczonych jednostek na cmentarz");
+            }
             MoveDeadCreaturesToGraveyard(_player.Opponent);
             MoveDeadCreaturesToGraveyard(_player);
+            #endregion
 
-            Console.WriteLine(" - End of combat step");
+            #region Combat_Phase_End of Combat
+            CurrentPhase = PhaseType.Combat_Phase_End;
+            if (logs)
+            {
+                Console.WriteLine(" - End of combat step");
+            }
+            #endregion
         }
         public void Second_Main_Phase(Player _player)
         {
+            #region Second_Main_Phase
             CurrentPhase = PhaseType.Second_Main_Phase;
-            Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine($"║                           Second_Main_Phase: Player {_player.PlayerNumberID}                          ║");
-            Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
+            if (logs)
+            {
+                Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
+                Console.WriteLine($"║                           Second_Main_Phase: Player {_player.PlayerNumberID}                          ║");
+                Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
+            }
             //Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
             Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
 
             if (_player.IsAI)
             {
-                _player.PlayRandomLandFromHand();
-                _player.MakePlaysWithRandomCardFromHand();
+                _player.AI_PlayLandCardIfPossible();
+                _player.AI_MakePlaysWithRandomCardFromHand();
                 return;
             }
 
@@ -228,26 +307,38 @@ namespace MTG_ConsoleEngine
                     handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
                 }
             }
+            #endregion
         }
         public void End_Phase(Player _player)
         {
+            #region End_Phase
             CurrentPhase = PhaseType.End_Phase;
-            Console.WriteLine("╔════════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                               End Phase: Player 2                              ║");
-            Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════════╝");
+            if (logs)
+            {
+                Console.WriteLine("╔════════════════════════════════════════════════════════════════════════════════╗");
+                Console.WriteLine("║                               End Phase: Player 2                              ║");
+                Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════════╝");
+            }
             //Console.WriteLine("End_Phase: Player " + _player.ID);
             //Console.WriteLine(" - End of turn step");
             _player.IsLandPlayedThisTurn = false;
 
-            Console.WriteLine("przywracanie hp ocalałym jednostom");
+            if (logs)
+            {
+                Console.WriteLine("przywracanie hp ocalałym jednostom");
+            }
             RecoverHealthSurvivedCreatures();
-          //  _player.DisplayPlayerField();
-            Console.WriteLine(" - Cleanup step");
-            Console.WriteLine("Sprawdzanie ilosci kart na ręce przeciwnika) - 7 max inaczej wyrzuć jakąś przed dostaniem kolejnej.");
-            
+            //  _player.DisplayPlayerField();
+            if (logs)
+            {
+                Console.WriteLine(" - Cleanup step");
+                Console.WriteLine("Sprawdzanie ilosci kart na ręce przeciwnika) - 7 max inaczej wyrzuć jakąś przed dostaniem kolejnej.");
+            }
             HandCardsCleanUpCountChecker(Players[_player.PlayerNumberID == 1 ? 1 : 0]);
+            #endregion
         }
 
+      
         private void ExecuteCombat()
         {
             foreach(var attacker in DeclaredAttackers) /* <DEFFENDER, ATTACKER> */
@@ -287,9 +378,6 @@ namespace MTG_ConsoleEngine
                 Console.WriteLine();
             }
         }
-        
-        
-      
         private void HandCardsCleanUpCountChecker(Player _player)
         {
             if(TurnCounter < 2) return;
@@ -298,7 +386,7 @@ namespace MTG_ConsoleEngine
             {
                 if( _player.IsAI)
                 {
-                    _player.RemoveOneCardFromHand();
+                    _player.AI_RemoveOneCardFromHand();
                     continue;
                 }
 
@@ -321,22 +409,17 @@ namespace MTG_ConsoleEngine
         }
         private void RecoverHealthSurvivedCreatures()
         {
-            Console.WriteLine("Work in progress...");
+            Players[0].CombatField.ForEach(creature => ((Creature)creature).ResetStatsAfterFight());
         }
         private void CastInstantIfCan(Player _player)
         {
             if (_player.Hand.Any(x => (x is Instant) && ((Instant)x).isAbleToPlay))
             {
                 Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {_player.PlayerNumberID}");
-                Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");
-             
+                Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");   
                 
                 Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
-                if(_player.IsAI)
-                {
-                    _player.PlayRandomInstatFromHand();
-                    return;
-                }
+
                 while (true)
                 {
 
@@ -383,7 +466,20 @@ namespace MTG_ConsoleEngine
                 corpse.Owner.CombatField.Remove(corpse);    
             }
         }
-     
+        private void ShuffleDeck(Player deckOwner)
+        {
+            var rand = new Random();
+            for (var i = deckOwner.Deck.Count - 1; i > 0; i--)
+            {
+                var temp = deckOwner.Deck[i];
+                var index = rand.Next(0, i + 1);
+                deckOwner.Deck[i] = deckOwner.Deck[index];
+                deckOwner.Deck[index] = temp;
+            }
+        }
+        
+
+       
         public List<object> GetValidTargetsForCardType(CardBase card)
         {
             if(card is Instant instant)
@@ -427,17 +523,33 @@ namespace MTG_ConsoleEngine
 
             return new();
         }
-
-        public void ShuffleDeck(Player deckOwner)
+        
+        public GameState GetGameState()
         {
-            var rand = new Random();
-            for (var i = deckOwner.Deck.Count - 1; i > 0; i--)
-            {
-                var temp = deckOwner.Deck[i];
-                var index = rand.Next(0, i + 1);
-                deckOwner.Deck[i] = deckOwner.Deck[index];
-                deckOwner.Deck[index] = temp;
-            }
+            // zapisanie 
+            // zapisanie aktualnych stanów graczy 
+            // zapisanie numeru tury
+            // zapisanie info o ostatniego GamePhase'a
+            // zapisanie ostatniego wykonanego ruchu gracza w ostatnim GamePhasie
+
+            GameState state = new();
+
+            state.Player_1 = Players[0];
+            state.Player_2 = Players[1];
+            state.TurnCounter = this.TurnCounter;
+            state.LastGamePhase = this.CurrentPhase;
+            state.DeclaredAttackers = this.DeclaredAttackers;
+            state.DeclaredDeffenders = this.DeclaredDeffenders;
+
+            return state;
+        }
+
+        public void ContinueGameFromState(GameState state)
+        {
+            Console.WriteLine("kontynuowanie gry");
+
+           // RunGameLoop();
+
         }
     }
 }

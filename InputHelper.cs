@@ -6,7 +6,7 @@ namespace MTG_ConsoleEngine
     {
         public static Dictionary<Creature, Creature> Input_DefendersDeclaration(Engine _gameEngine, List<Creature> _Attackers , List<Creature> _legalDeffenders, int _playerIndex)
         {
-            Console.WriteLine("[ Example input: 0-0, 0-1, 1-2 ]\n[ AttackerIndex - YourDefenderIndex , ...-...]");   
+            Console.WriteLine("[ Example input: 0-0, 0-1, 1-2 ]\n[ deffender - attacker, ...-...]");   
             Dictionary<Creature, Creature> _deffendersToDeclare = new();
             while (true)
             { 
@@ -32,7 +32,7 @@ namespace MTG_ConsoleEngine
 
                     }
                     // sprawdzenie czy dwa podane parametry sa liczbą 
-                    if(Int32.TryParse(input_splitted[0], out attackerID) && Int32.TryParse(input_splitted[1],out deffenderID))
+                    if(Int32.TryParse(input_splitted[1], out attackerID) && Int32.TryParse(input_splitted[0],out deffenderID))
                     {   
                         // sprawdzenie czy zakresy podanych ID nie wykraczaja poza dozwolone granice liczby mobkow
                         if(attackerID<_Attackers.Count && deffenderID < _legalDeffenders.Count)
@@ -53,7 +53,7 @@ namespace MTG_ConsoleEngine
                                 {
                                     // pierwsze wystąpienie obrony przeciw temu potworkowi, dodanie go wraz z naszym obrońcą
                                     _deffendersToDeclare.Add(deffender,attacker);
-                                    Console.WriteLine($"dodano: {attacker.Name} vs {deffender.Name}");
+                                    Console.WriteLine($"dodano: {deffender.Name} vs {attacker.Name}");
                                 }
                                 else
                                 {
