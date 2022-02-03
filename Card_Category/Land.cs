@@ -54,7 +54,7 @@ namespace MTG_ConsoleEngine.Card_Category
 
             foreach(var action in specialAction)
             {
-                Console.WriteLine("Aktywowano: " + CardSpecialActions.FirstOrDefault().description);
+               // Console.WriteLine("Aktywowano: " + CardSpecialActions.FirstOrDefault().description);
                 CardSpecialActions.FirstOrDefault().action();
             }
         }

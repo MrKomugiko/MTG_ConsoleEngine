@@ -136,7 +136,7 @@ namespace MTG_ConsoleEngine.Card_Category
         {
             if (CardSpecialActions.Count > 0)
             {
-                Console.WriteLine("Action/s Triggered!");
+                //Console.WriteLine("Action/s Triggered!");
                 foreach (var actions in CardSpecialActions.Where(x => x.trigger == actionType))
                 {
                     actions.action();
@@ -157,14 +157,14 @@ namespace MTG_ConsoleEngine.Card_Category
                // Console.WriteLine($"Jednostka atakujaca {(this.Name)} już nie żyje, atak nie zostaje wyprowadzony. next");
                 return; 
             }
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.WriteLine($"Player {Owner.PlayerNumberID} Atakuje kartą {this.Name}");
-            Console.ResetColor();
+           // Console.ForegroundColor = ConsoleColor.DarkGreen;
+            //Console.WriteLine($"Player {Owner.PlayerNumberID} Atakuje kartą {this.Name}");
+           // Console.ResetColor();
             if (_defender != null)
             {
                 if (_defender.CurrentHealth <= 0) 
                 {
-                    Console.WriteLine($"Przeciwnik {(_defender.Name)} już nie żyje, atak nie obrona nie zostałą przeprowadzona przez nią.");
+                    //Console.WriteLine($"Przeciwnik {(_defender.Name)} już nie żyje, atak nie obrona nie zostałą przeprowadzona przez nią.");
                     return; 
                 }
                 this.CurrentHealth -= _defender.CurrentAttack;
@@ -174,7 +174,7 @@ namespace MTG_ConsoleEngine.Card_Category
             }
             else
             {
-                Console.WriteLine("Atak nie napotkał obrony, atak w Przeciwnika (Player'a)");
+               // Console.WriteLine("Atak nie napotkał obrony, atak w Przeciwnika (Player'a)");
                 Owner.Opponent.DealDamage(this.CurrentAttack);
             }
 

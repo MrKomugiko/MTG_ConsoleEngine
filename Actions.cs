@@ -16,13 +16,13 @@ namespace MTG_ConsoleEngine
         public static void Haste(Creature creatureCard)
         {
             // karta jest aktywna orazu po wprowadzeniu jej na pole / mozna nią odrazu atakowac lub uzyc umiejetnosci
-            Console.WriteLine("Aktywowanie efektu Haste: Karta wkraca na pole bez efektu osłabienia\n(można nią zaatakować w tej samej turze)");
+         //   Console.WriteLine("Aktywowanie efektu Haste: Karta wkraca na pole bez efektu osłabienia\n(można nią zaatakować w tej samej turze)");
             creatureCard.isTapped = false;
         }
         public static void Heal(int value, Player owner)
         {
             // leczenie po zadaniu obrażeń 
-            Console.WriteLine($"Leczysz sie za {value}.");
+          //  Console.WriteLine($"Leczysz sie za {value}.");
             owner.Heal(value);
         }
         public static void AssingExtraValuesToCreature(int hp, int atk, Creature? target)
@@ -33,12 +33,12 @@ namespace MTG_ConsoleEngine
                 target.BaseAttack += atk;
                 target.BaseHealth += hp;
                 
-                Console.WriteLine($"{target.Name} po nałożeniu enchantu: atk:{target.CurrentAttack} / hp:{target.CurrentHealth}");
+          //      Console.WriteLine($"{target.Name} po nałożeniu enchantu: atk:{target.CurrentAttack} / hp:{target.CurrentHealth}");
             }
         }
         public static void DamageSelectedCreature(int value, Creature target)
         {
-            Console.WriteLine($"Damage {target.Name} with {value} damage");
+         //   Console.WriteLine($"Damage {target.Name} with {value} damage");
             target.CurrentHealth -= value;
         }
     }

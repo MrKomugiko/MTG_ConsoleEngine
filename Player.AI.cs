@@ -160,11 +160,11 @@ namespace MTG_ConsoleEngine
             int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
 
             _gameEngine.DeclaredAttackers = this.GetCreaturesFromField(inputArr);
-            Console.WriteLine($">>>>>> Attackers declared by Player {PlayerNumberID}: "+String.Join("\n- ", _gameEngine.DeclaredAttackers.Select(x=>x.Name)));
+            //Console.WriteLine($">>>>>> Attackers declared by Player {PlayerNumberID}: "+String.Join("\n- ", _gameEngine.DeclaredAttackers.Select(x=>x.Name)));
         }
         public Dictionary<Creature,Creature> AI_RandomDeffendersDeclaration()
         {
-            Console.WriteLine(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
+            //Console.WriteLine(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
             return new();
         }
 

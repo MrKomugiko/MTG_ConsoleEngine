@@ -74,9 +74,9 @@ namespace MTG_ConsoleEngine
                 {
                     if (Players[CurrentPlayerIndex].Health <= 0)
                     {
-                        Console.WriteLine("End of Game:");
-                        Console.WriteLine("Player 1 HP:" + Players[0].Health);
-                        Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                       // Console.WriteLine("End of Game:");
+                       // Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                       // Console.WriteLine("Player 2 HP:" + Players[1].Health);
                         gameEnded = true;
                         return;
                        
@@ -86,12 +86,12 @@ namespace MTG_ConsoleEngine
 
                 CurrentPlayerIndex = CurrentPlayerIndex == 0 ? 1 : 0;
                 TurnCounter++;
-                Console.WriteLine("Turn: " + TurnCounter);
-                if(logs)
-                {
-                    Console.WriteLine("Player 1 HP:" + Players[0].Health);
-                    Console.WriteLine("Player 2 HP:" + Players[1].Health);
-                }
+             //   Console.WriteLine("Turn: " + TurnCounter);
+              //  if(logs)
+              //  {
+              //      Console.WriteLine("Player 1 HP:" + Players[0].Health);
+              //      Console.WriteLine("Player 2 HP:" + Players[1].Health);
+              //  }
             };
         }
 
@@ -212,7 +212,7 @@ namespace MTG_ConsoleEngine
                 }
 
             }
-            Console.ResetColor();
+            //Console.ResetColor();
             #endregion
 
             #region Combat_Phase_AttackerInstants
@@ -345,7 +345,7 @@ namespace MTG_ConsoleEngine
             {
                 int attackerMaxHP = attacker.CurrentHealth;
                 List<int> defendersHpBeforeCombat = new();
-                Console.WriteLine($"Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
+                //Console.WriteLine($"Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
                 if(DeclaredDeffenders.Any(x=>x.Value == attacker))
                 {
                     if(attacker.CurrentHealth <= 0) {
@@ -375,7 +375,7 @@ namespace MTG_ConsoleEngine
                 }
                 attacker.Attack(_defender:null);
 
-                Console.WriteLine();
+               // Console.WriteLine();
             }
         }
         private void HandCardsCleanUpCountChecker(Player _player)

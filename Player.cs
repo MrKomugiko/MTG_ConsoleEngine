@@ -35,29 +35,29 @@ namespace MTG_ConsoleEngine
         }
         public void DealDamage(int value)
         {
-            Console.BackgroundColor = ConsoleColor.DarkRed;
-            Console.ForegroundColor = ConsoleColor.White;
+          //  Console.BackgroundColor = ConsoleColor.DarkRed;
+         //   Console.ForegroundColor = ConsoleColor.White;
 
-            if(value > 0)
-            {
-                Console.Write($"Player {PlayerNumberID} otrzymał {value} obrażeń. ");
-            }  
+           // if(value > 0)
+          //  {
+          //      Console.Write($"Player {PlayerNumberID} otrzymał {value} obrażeń. ");
+          //  }  
             Health -= value;
             //Console.WriteLine($"Aktualne HP: {Health}");
-            Console.ResetColor();
+          //  Console.ResetColor();
         }
         public void Heal(int value)
         {
-            Console.BackgroundColor = ConsoleColor.DarkGreen;
-            Console.ForegroundColor = ConsoleColor.White;
+         //   Console.BackgroundColor = ConsoleColor.DarkGreen;
+         //   Console.ForegroundColor = ConsoleColor.White;
 
-            if(value > 0)
-            {
-                Console.Write($"Player {PlayerNumberID} został uleczony o {value} hp.");
-            }  
+         //   if(value > 0)
+          //  {
+          //      Console.Write($"Player {PlayerNumberID} został uleczony o {value} hp.");
+          //  }  
             Health += value;
             //Console.WriteLine($"Aktualne HP: {Health}");
-            Console.ResetColor();
+          //  Console.ResetColor();
         }
         public void AddToDeck(CardBase _card)
         {
@@ -66,13 +66,13 @@ namespace MTG_ConsoleEngine
         }
         public void DrawCard()
         {
-            Console.ForegroundColor = color;
+         //   Console.ForegroundColor = color;
             var newCard = Deck.First();
             Deck.Remove(newCard);
             Hand.Add(newCard);
          
             //Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
-            Console.ResetColor();
+          //  Console.ResetColor();
         }
         public List<Creature> Get_AvailableAttackers() {
 
@@ -92,10 +92,10 @@ namespace MTG_ConsoleEngine
             var possibleDefenders = CombatField.Where(x=>x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
             if(possibleDefenders.Count == 0) return new();
 
-            Console.WriteLine("Dostępne jednostki do obrony");
-            possibleDefenders.ForEach(x => 
-                Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
-            );
+          //  Console.WriteLine("Dostępne jednostki do obrony");
+          //  possibleDefenders.ForEach(x => 
+          //      Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
+          //  );
             return possibleDefenders;
 
         }
@@ -103,15 +103,15 @@ namespace MTG_ConsoleEngine
         public List<Creature> SelectAttackers_HumanInteraction()
         {
             TryAgain:
-            Console.ForegroundColor = color;
+          //  Console.ForegroundColor = color;
             DisplayPlayerField();
-            Console.WriteLine("Wybierz atakujących z dostępnych kreatur na polu: [ indexy oddzielaj przecinkiem: 0,1,3... ]");
+         //   Console.WriteLine("Wybierz atakujących z dostępnych kreatur na polu: [ indexy oddzielaj przecinkiem: 0,1,3... ]");
             // TODO: zrobic kopie tej metody dla automatycznej odpowiedzi ze strony AI
             List<Creature> availableTargets = Get_AvailableAttackers();
             if(availableTargets.Count == 0) return new();
 
             string input = Console.ReadLine()??"";
-            Console.ResetColor();
+            //Console.ResetColor();
             if(String.IsNullOrEmpty(input)) return new();
 
             List<string> attackers = input.Trim().Split(",").ToList();
@@ -124,7 +124,7 @@ namespace MTG_ConsoleEngine
                 if(Int32.TryParse(attacker, out attackIndex))
                 {
                     if(attackIndex > CombatField.Count-1 || attackIndex < 0 ) {
-                        Console.WriteLine("niepoprawny index potworka => "+attackIndex+", pominięto.");
+                   //     Console.WriteLine("niepoprawny index potworka => "+attackIndex+", pominięto.");
                         continue;
                         }
 
@@ -135,14 +135,14 @@ namespace MTG_ConsoleEngine
                     }
                     else
                     {
-                        Console.WriteLine($"pominieto, {attackingCreature.Name} nie moze teraz walczyć");
+                   //     Console.WriteLine($"pominieto, {attackingCreature.Name} nie moze teraz walczyć");
                         continue;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"błędna wartość => {attacker}, wprwadz sekwencje np.: 0,1,2");
-                    Console.WriteLine("Wprwadz poprawnie cały ciąg, ponownie. Enter to skip.");
+             //       Console.WriteLine($"błędna wartość => {attacker}, wprwadz sekwencje np.: 0,1,2");
+              //      Console.WriteLine("Wprwadz poprawnie cały ciąg, ponownie. Enter to skip.");
                     _attackersToDeclare.Clear();
                     goto TryAgain;
                 }
@@ -153,23 +153,23 @@ namespace MTG_ConsoleEngine
 
         public Dictionary<Creature,Creature> SelectDeffenders_HumanInteraction()
         {
-            Console.WriteLine("Nadchodzący Atak:");
+          //  Console.WriteLine("Nadchodzący Atak:");
             var DeclaredAttackers = _gameEngine.GetAttackerDeclaration();
-            foreach (Creature creature in DeclaredAttackers)
-            {
-                Console.WriteLine($"[{DeclaredAttackers.IndexOf(creature)}] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth})");
-            }
+          //  foreach (Creature creature in DeclaredAttackers)
+          //  {
+          //      Console.WriteLine($"[{DeclaredAttackers.IndexOf(creature)}] - {creature.Name} ({creature.CurrentAttack}/{creature.CurrentHealth})");
+          //  }
 
-            Console.WriteLine($"---------- Enemy Attackers ID ----------");
+          //  Console.WriteLine($"---------- Enemy Attackers ID ----------");
             _gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();                
-            Console.WriteLine($"[{(PlayerIndex)}] => Your Combat field Cards:  <--- niepotrzebne,usunąć ?");
+        //    Console.WriteLine($"[{(PlayerIndex)}] => Your Combat field Cards:  <--- niepotrzebne,usunąć ?");
             this.DisplayPlayerField();
             
             // TODO: zrobic kopie tej metody dla automatycznej odpowiedzi ze strony AI
             var availableDeffenders = Get_AvailableDeffenders();
             
             if(availableDeffenders.Count == 0){
-                Console.WriteLine("twoje pole jest puste, nie masz żadnej kreatury do wystawienia na obronie.");
+          //      Console.WriteLine("twoje pole jest puste, nie masz żadnej kreatury do wystawienia na obronie.");
                 return new();
             }
             
@@ -177,8 +177,8 @@ namespace MTG_ConsoleEngine
         }
         public bool PlayCardFromHand(CardBase card)
         {
-            Console.ForegroundColor = color;
-            Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
+           // Console.ForegroundColor = color;
+          //  Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
             (bool status, int playerIndex, int creatureIndex) playerResponse = (false,-1,-1);
             switch(card)
             {
@@ -220,7 +220,7 @@ namespace MTG_ConsoleEngine
                     else
                     {
                         //TODO: rozwazyc opcje dodania enczanta permamentnego, ktory poprostu jest na stole 
-                        Console.WriteLine("Użycie Enchantmenta na postaci/stole");
+            //            Console.WriteLine("Użycie Enchantmenta na postaci/stole");
                         throw new NotImplementedException();
                     }
                     break;
@@ -230,9 +230,9 @@ namespace MTG_ConsoleEngine
 
                     if(availableTargets.Count == 0) return false;
 
-                    Console.WriteLine($"[{this.PlayerIndex}] => Your Combat field Cards:");
+                  //  Console.WriteLine($"[{this.PlayerIndex}] => Your Combat field Cards:");
                     this.DisplayPlayerField();
-                    Console.WriteLine($"[{(Opponent.PlayerIndex)}] => Enemies Combat field Cards:");
+                 //   Console.WriteLine($"[{(Opponent.PlayerIndex)}] => Enemies Combat field Cards:");
                     _gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();   
                     playerResponse = InputHelper.Input_SinglePairPlayerMonster(_gameEngine);
                     
@@ -243,7 +243,7 @@ namespace MTG_ConsoleEngine
                     }
                     else 
                     {
-                        Console.WriteLine("anuluj, skip");
+              //          Console.WriteLine("anuluj, skip");
                         return false;
                     }
                     
@@ -252,7 +252,7 @@ namespace MTG_ConsoleEngine
             //Console.WriteLine("zapłąc za karte / usun ją z ręki");
             card.CheckAvailability().landsToTap.ForEach(c => c.isTapped = true);
             Hand.Remove(card);
-            Console.ResetColor();
+            //Console.ResetColor();
             return true;
         }
         public void DisplayPlayerField() => TableHelpers.DisplayFieldTable(_gameEngine, color, CombatField, PlayerNumberID);
