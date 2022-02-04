@@ -4,6 +4,8 @@ namespace MTG_ConsoleEngine
 {
     public abstract class CardBase 
     {
+        public int ID;
+
         public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
 
         public readonly string Identificator; // 128_M21
@@ -119,7 +121,7 @@ namespace MTG_ConsoleEngine
                                 creatureManaCostCopy[""] -= noCoreLand.manaValue.First().Value;
                                 landCardsToTap.Add(noCoreLand);
                             }
-                            foreach (Land coreLand in currentLandsCardsCopy.Except(landCardsToTap))
+                            foreach (Land coreLand in currentLandsCardsCopy.Except(landCardsToTap).ToList())
                             {
                                 if (creatureManaCostCopy[""] == 0) break;
                                 SumManaOwnedAndAvailable[coreLand.manaValue.First().Key] -= coreLand.manaValue.First().Value;

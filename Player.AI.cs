@@ -34,19 +34,19 @@ namespace MTG_ConsoleEngine
             }
         }
         
-        public List<int[]> GetAllPossibleAttackCombinationsIndexes(List<Creature> _availableTargets)
+        public List<int[]> GetAllPossibleAttackCombinationsIndexes(Creature[] _availableTargets)
         {
             List<int[]> result = new List<int[]>();
 			//Console.WriteLine("count "+availableTargets.Count);
-            if (_availableTargets.Count == 0)
+            if (_availableTargets.Length == 0)
                 return new List<int[]> { new int[1] { -1 } };
 
             int[] arr = _availableTargets.Select(x=>CombatField.IndexOf(x)).ToArray();
 
             for(int i = arr.Length-1; i>=0; i--)
             {
-                int n = _availableTargets.Count;
-                int k = _availableTargets.Count- i;
+                int n = _availableTargets.Length;
+                int k = _availableTargets.Length - i;
 
                 result.Add(new int[k+1]);
                 foreach (int[] combo in Combinations(k, n))
@@ -88,7 +88,7 @@ namespace MTG_ConsoleEngine
         public void AI_PlayLandCardIfPossible()
         {
             /*_AI_*/ // auto pick land if possible
-            CardBase firstLandFromHAnd = this.Hand.FirstOrDefault(x => x is Land );
+            CardBase firstLandFromHAnd = this.Hand.FirstOrDefault(x => x is Land);
             if (firstLandFromHAnd != null && IsLandPlayedThisTurn == false)
             {
                 //Console.WriteLine("Auto place Land");
@@ -97,14 +97,9 @@ namespace MTG_ConsoleEngine
         }
         public void AI_PlayRandomInstatFromHand()
         {
-            /*_AI_*/ // random pick instant if can
-            //Console.WriteLine($"IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI:Player_{this.PlayerNumberID} \n >> AI CANT CHOOSE INTANTS ... YET! <<");
-
+            
             if (this.Hand.Any(x => (x is Instant) && ((Instant)x).isAbleToPlay))
             {
-                //Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {this.PlayerNumberID}");
-                //Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");
-
                 while (true)
                 {
                     List<Instant> availableInstants = this.Hand.Where(x => x is Instant && x.isAbleToPlay)
@@ -130,70 +125,170 @@ namespace MTG_ConsoleEngine
 
         public void AI_MakePlaysWithRandomCardFromHand()
         {
-            
+            AI_PlayLandCardIfPossible();
             //Console.WriteLine($"IDIOTYCZNE, LOSOWE RUCHY ! ~ by AI:Player_{this.PlayerNumberID} \n zagraj losową kartą z ręki -> hard coded only creatures");
             // hard coded play creature if can
             while (true)
             {
                 // get list available draws
-                Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
+                //Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
 
-                List<CardBase> randomPlays = this.Hand.Where(card => card.isAbleToPlay).ToList();
-                var creaturesOnly = randomPlays.Where(c => c is Creature).ToList();
+                List<CardBase> creaturesOnly = this.Hand.Where(card => card is Creature && card.isAbleToPlay).ToList();
+               // var creaturesOnly = randomPlays.Where(c => c is Creature).ToList();
                 //Console.WriteLine("lista mozliwych akcji");
                 //foreach (CardBase card in randomPlays)
                 //{
                 //    Console.WriteLine($"Play: {card.Name} [{card.GetType().Name}] {((card is Creature)?"<---":"")}");
                 //}
 
-                if (creaturesOnly.Count() == 0) break;
+                if (creaturesOnly.Count == 0) break;
                 CardBase randomCreatureFromHand = creaturesOnly[rand.Next(0, creaturesOnly.Count())];
                 this.PlayCardFromHand(randomCreatureFromHand);
             }
         }
-        public void AI_RandomAttackDeclaration()
+        public Creature[] AI_RandomAttackDeclaration()
         {
             /*_AI_*/ // random attack sequention from available
 
-            List<Creature> availableTargets = this.Get_AvailableAttackers();
+            Creature[] availableTargets = this.Get_AvailableAttackers();
             List<int[]> randomIndexesList = this.GetAllPossibleAttackCombinationsIndexes(availableTargets);
+            Console.WriteLine("\t >> possible attack combinations: ");
+            foreach(var combination in randomIndexesList)
+            {
+                Console.WriteLine("\t\t - "+String.Join(",", combination));
+            }
             int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
 
-            _gameEngine.DeclaredAttackers = this.GetCreaturesFromField(inputArr);
-            Console.WriteLine($">>>>>> Attackers declared by Player {PlayerNumberID}: "+String.Join("\n- ", _gameEngine.DeclaredAttackers.Select(x=>x.Name)));
+            return this.GetCreaturesFromField(inputArr,true).ToArray();
+            //Console.WriteLine($">>>>>> Attackers declared by Player {PlayerNumberID}: "+String.Join("\n- ", _gameEngine.DeclaredAttackers.Select(x=>x.Name)));
         }
-        public Dictionary<Creature,Creature> AI_RandomDeffendersDeclaration()
+        public List<Dictionary<Creature,Creature>> GetAllPossibleDeffenseCombination(Creature[] incommingAttacks, Creature[] validDeffenders)
         {
-            Console.WriteLine(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
-            return new();
+            List<Dictionary<Creature, Creature>> possiblescenarios = new();
+
+            Dictionary<Creature, Creature> scenarioAllSurvive = new();
+            foreach (var _attacker in incommingAttacks.OrderByDescending(x => x.CurrentHealth))
+            {
+                Console.WriteLine("attacker");
+                foreach (var _defender in validDeffenders.Where(x => x.CurrentHealth > _attacker.CurrentAttack))
+                {
+                    if (scenarioAllSurvive.ContainsValue(_attacker)) break;
+                    if (scenarioAllSurvive.ContainsKey(_defender)) continue;
+                    Console.WriteLine("add defender");
+                    scenarioAllSurvive.Add(_defender, _attacker);
+                }
+            }
+            if (scenarioAllSurvive.Count > 0)
+            {
+                possiblescenarios.Add(scenarioAllSurvive);
+            }
+
+            Dictionary<Creature, Creature> scenarioDeffUntilEnemyDie = new();
+            foreach (var _attacker in incommingAttacks.OrderBy(x => x.CurrentHealth))
+            {
+                Console.WriteLine("attacker");
+                foreach (var _defender in validDeffenders.Where(x => x.CurrentAttack <= _attacker.CurrentHealth).OrderByDescending(X => X.CurrentAttack))
+                {
+                    // Console.WriteLine(_defender.Name);
+                    if (scenarioDeffUntilEnemyDie.ContainsKey(_defender)) continue;
+                    if (scenarioDeffUntilEnemyDie.Where(x => x.Value == _attacker).Sum(x => x.Key.CurrentAttack) >= _attacker.CurrentHealth) break;
+                    Console.WriteLine("add defender");
+                    scenarioDeffUntilEnemyDie.Add(_defender, _attacker);
+                }
+                if (scenarioDeffUntilEnemyDie.Where(x => x.Value == _attacker).Sum(x => x.Key.CurrentAttack) < _attacker.CurrentHealth)
+                {
+                    // bezsensowna smierc, kilka jednostek i tak nie zabije tego atakujacego, usuń te wpisy z listy i przejdz do kolejnego atakuajcegto
+                    var todelete = scenarioDeffUntilEnemyDie.Where(x => x.Value == _attacker);
+                    foreach (var c in todelete)
+                    {
+                        Console.WriteLine("del");
+                        scenarioDeffUntilEnemyDie.Remove(c.Key);
+                    }
+                }
+            }
+            if (scenarioDeffUntilEnemyDie.Count > 0)
+            {
+                possiblescenarios.Add(scenarioDeffUntilEnemyDie);
+            }
+
+            Dictionary<Creature, Creature> scenarioWinAndSacrificeForDeffenseFromStrongest = scenarioAllSurvive;
+            //sprawdz czy zostałktos  atakujacy bez blocka
+            var attackersleft = incommingAttacks.Except(scenarioWinAndSacrificeForDeffenseFromStrongest.Select(x => x.Value));
+            if (attackersleft.Count() > 0)
+            {
+                var deffendersLeft = validDeffenders.Except(scenarioWinAndSacrificeForDeffenseFromStrongest.Keys);
+                if (deffendersLeft.Count() > 0)
+                {
+                    // wybranie najslabszego zostałęgo i przypisanie go do najmocniejszego
+                    var najslabszyDeff = deffendersLeft.OrderBy(x => x.CurrentHealth).ThenBy(x => x.CurrentAttack).First();
+                    var najsilniejszyAtkakujacy = attackersleft.OrderByDescending(x => x.CurrentAttack).First();
+
+                    scenarioWinAndSacrificeForDeffenseFromStrongest.Add(najslabszyDeff, najsilniejszyAtkakujacy);
+                }
+            }
+            if (scenarioWinAndSacrificeForDeffenseFromStrongest.Count > 0)
+            {
+                possiblescenarios.Add(scenarioWinAndSacrificeForDeffenseFromStrongest);
+            }
+
+            possiblescenarios.Add(new());
+
+            return possiblescenarios;
         }
 
-        public List<Creature> GetCreaturesFromField(int[] indexes, bool validated = false)
+        public Dictionary<Creature,Creature> AI_RandomDeffendersDeclaration()
+        {
+            //Console.WriteLine(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
+
+            // AI gonna block ONLY WHEN monster can survive attack
+            List<Creature> validDeffenders = Get_AvailableDeffenders();
+            Creature[] attackers = _gameEngine.GetAttackerDeclaration();
+
+            // Deffender, Attacker
+            Dictionary<Creature, Creature> creaturesToDeclareAsDeffenders = new Dictionary<Creature, Creature>();
+            foreach (Creature _attacker in attackers)
+            {
+                foreach (Creature _deffender in validDeffenders) 
+                {
+                    if (creaturesToDeclareAsDeffenders.Count == 1) break;
+                    if (creaturesToDeclareAsDeffenders.ContainsKey(_deffender)) continue;
+                
+                    if(_deffender.CurrentHealth > _attacker.CurrentAttack)
+                    {
+                        creaturesToDeclareAsDeffenders.Add(_deffender,_attacker);
+                        Console.WriteLine($">> Deffence :[{ CombatField.IndexOf(_deffender)}]-[{Opponent.CombatField.IndexOf(_attacker)}] {_deffender.Name} [{_deffender.CurrentAttack}/{_deffender.CurrentHealth}]");
+                    }
+                }
+            }
+
+            return creaturesToDeclareAsDeffenders;
+        }
+
+        public Creature[] GetCreaturesFromField(int[] indexes, bool validated = false)
         {
             indexes = indexes.Distinct().ToArray();
             if (indexes[0] == -1)
             {
-               // Console.WriteLine(" [-1] / tym razem bez walki...");
-                return new(); // nie atakujemy wcale wartosc -1
+                Console.WriteLine(" >>>>> tym razem bez walki...");
+                return Array.Empty<Creature>(); // nie atakujemy wcale wartosc -1
             }
                 
             if(validated == true)
             {
-                List<Creature> _attackersToDeclare = new();
-                foreach (int attacker in indexes)
+                Creature[] _attackersToDeclare = new Creature[indexes.Length];
+                for(int i=0;i<indexes.Length;i++)
                 {
-                    Creature attackingCreature = (Creature)CombatField[attacker];
-                    _attackersToDeclare.Add(attackingCreature);
-                   // Console.WriteLine("dodano do rejestracji :" + attackingCreature.Name);
+                    _attackersToDeclare[i] = (Creature)CombatField[indexes[i]];
+                    Console.WriteLine($">> Atak :[{CombatField.IndexOf(_attackersToDeclare[i])}] {_attackersToDeclare[i].Name} [{_attackersToDeclare[i].CurrentAttack}/{_attackersToDeclare[i].CurrentHealth}]"); 
                 }
                 return _attackersToDeclare;
-                }
+            }
             else
             {
-                List<Creature> availableTargets = Get_AvailableAttackers();
+                Creature[] availableTargets = Get_AvailableAttackers().ToArray();
 
-                if (availableTargets.Count == 0)
-                    return new();
+                if (availableTargets.Length == 0)
+                    return Array.Empty<Creature>();
 
                 List<Creature> _attackersToDeclare = new();
 
@@ -202,20 +297,22 @@ namespace MTG_ConsoleEngine
                     if (attacker > CombatField.Count - 1 || attacker < 0)
                         continue;
 
-                    Creature attackingCreature = (Creature)CombatField[attacker];
+                    //Creature attackingCreature = (Creature)CombatField[attacker];
+                    var attackingCreature = CombatField[attacker];
+
                     if (_attackersToDeclare.Contains(attackingCreature))
                         continue;
 
                     if (availableTargets.Contains(attackingCreature))
                     {
-                        _attackersToDeclare.Add(attackingCreature);
+                        _attackersToDeclare.Add((Creature)attackingCreature);
                         //Console.WriteLine("zarejestrowano :" + attackingCreature.Name);
                     }
 
                     continue;
                 }
 
-                return _attackersToDeclare;
+                return _attackersToDeclare.ToArray();
             }
         }
     }   
