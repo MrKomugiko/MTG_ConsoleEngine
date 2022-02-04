@@ -66,13 +66,20 @@ namespace MTG_ConsoleEngine
         }
         public void DrawCard()
         {
-         //   Console.ForegroundColor = color;
-            var newCard = Deck.First();
-            Deck.Remove(newCard);
-            Hand.Add(newCard);
-         
+            //   Console.ForegroundColor = color;
+            if (Deck.Count > 0)
+            {
+                var newCard = Deck.First();
+                Deck.Remove(newCard);
+                Hand.Add(newCard);
+            }
+            else
+            {
+                Console.WriteLine("PRZEGRANA - BRAK KART!");
+                Health = -666;
+            }
             //Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
-          //  Console.ResetColor();
+            //  Console.ResetColor();
         }
         public Creature[] Get_AvailableAttackers() {
 
