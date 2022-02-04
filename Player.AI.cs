@@ -152,11 +152,11 @@ namespace MTG_ConsoleEngine
 
             Creature[] availableTargets = this.Get_AvailableAttackers();
             List<int[]> randomIndexesList = this.GetAllPossibleAttackCombinationsIndexes(availableTargets);
-            Console.WriteLine("\t >> possible attack combinations: ");
-            foreach(var combination in randomIndexesList)
-            {
-                Console.WriteLine("\t\t - "+String.Join(",", combination));
-            }
+            //Console.WriteLine("\t >> possible attack combinations: ");
+            //foreach(var combination in randomIndexesList)
+           // {
+           //     Console.WriteLine("\t\t - "+String.Join(",", combination));
+           // }
             int[] inputArr = randomIndexesList[rand.Next(randomIndexesList.Count)];
 
             return this.GetCreaturesFromField(inputArr,true).ToArray();
@@ -164,35 +164,42 @@ namespace MTG_ConsoleEngine
         }
         public List<Dictionary<Creature,Creature>> GetAllPossibleDeffenseCombination(Creature[] incommingAttacks, Creature[] validDeffenders)
         {
-            List<Dictionary<Creature, Creature>> possiblescenarios = new();
+            List<Dictionary<Creature, Creature>> possiblescenarios = new(4);
 
             Dictionary<Creature, Creature> scenarioAllSurvive = new();
             foreach (var _attacker in incommingAttacks.OrderByDescending(x => x.CurrentHealth))
             {
-                Console.WriteLine("attacker");
+               // Console.WriteLine("attacker");
                 foreach (var _defender in validDeffenders.Where(x => x.CurrentHealth > _attacker.CurrentAttack))
                 {
                     if (scenarioAllSurvive.ContainsValue(_attacker)) break;
                     if (scenarioAllSurvive.ContainsKey(_defender)) continue;
-                    Console.WriteLine("add defender");
+                  //  Console.WriteLine("add defender");
                     scenarioAllSurvive.Add(_defender, _attacker);
+
                 }
             }
             if (scenarioAllSurvive.Count > 0)
             {
                 possiblescenarios.Add(scenarioAllSurvive);
             }
+            else
+            {
+                //Console.WriteLine("scenario 1 - odpada");
+                possiblescenarios.Add(new());
+
+            }
 
             Dictionary<Creature, Creature> scenarioDeffUntilEnemyDie = new();
             foreach (var _attacker in incommingAttacks.OrderBy(x => x.CurrentHealth))
             {
-                Console.WriteLine("attacker");
+            //    Console.WriteLine("attacker");
                 foreach (var _defender in validDeffenders.Where(x => x.CurrentAttack <= _attacker.CurrentHealth).OrderByDescending(X => X.CurrentAttack))
                 {
                     // Console.WriteLine(_defender.Name);
                     if (scenarioDeffUntilEnemyDie.ContainsKey(_defender)) continue;
                     if (scenarioDeffUntilEnemyDie.Where(x => x.Value == _attacker).Sum(x => x.Key.CurrentAttack) >= _attacker.CurrentHealth) break;
-                    Console.WriteLine("add defender");
+                 //   Console.WriteLine("add defender");
                     scenarioDeffUntilEnemyDie.Add(_defender, _attacker);
                 }
                 if (scenarioDeffUntilEnemyDie.Where(x => x.Value == _attacker).Sum(x => x.Key.CurrentAttack) < _attacker.CurrentHealth)
@@ -201,7 +208,7 @@ namespace MTG_ConsoleEngine
                     var todelete = scenarioDeffUntilEnemyDie.Where(x => x.Value == _attacker);
                     foreach (var c in todelete)
                     {
-                        Console.WriteLine("del");
+                      //  Console.WriteLine("del");
                         scenarioDeffUntilEnemyDie.Remove(c.Key);
                     }
                 }
@@ -210,8 +217,19 @@ namespace MTG_ConsoleEngine
             {
                 possiblescenarios.Add(scenarioDeffUntilEnemyDie);
             }
+            else
+            {
+                //Console.WriteLine("scenario 2 - odpada");
+                possiblescenarios.Add(new());
 
-            Dictionary<Creature, Creature> scenarioWinAndSacrificeForDeffenseFromStrongest = scenarioAllSurvive;
+            }
+
+            Dictionary<Creature, Creature> scenarioWinAndSacrificeForDeffenseFromStrongest = new();
+            foreach(var option1 in scenarioAllSurvive)
+            {
+                scenarioWinAndSacrificeForDeffenseFromStrongest.Add(option1.Key,option1.Value);
+            }
+
             //sprawdz czy zostałktos  atakujacy bez blocka
             var attackersleft = incommingAttacks.Except(scenarioWinAndSacrificeForDeffenseFromStrongest.Select(x => x.Value));
             if (attackersleft.Count() > 0)
@@ -230,6 +248,12 @@ namespace MTG_ConsoleEngine
             {
                 possiblescenarios.Add(scenarioWinAndSacrificeForDeffenseFromStrongest);
             }
+            else
+            {
+                //Console.WriteLine("scenario 3 - odpada");
+                possiblescenarios.Add(new());
+
+            }
 
             possiblescenarios.Add(new());
 
@@ -241,27 +265,26 @@ namespace MTG_ConsoleEngine
             //Console.WriteLine(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
 
             // AI gonna block ONLY WHEN monster can survive attack
-            List<Creature> validDeffenders = Get_AvailableDeffenders();
+            Creature[] validDeffenders = Get_AvailableDeffenders().ToArray();
             Creature[] attackers = _gameEngine.GetAttackerDeclaration();
 
-            // Deffender, Attacker
-            Dictionary<Creature, Creature> creaturesToDeclareAsDeffenders = new Dictionary<Creature, Creature>();
-            foreach (Creature _attacker in attackers)
+            var defenseoptions = GetAllPossibleDeffenseCombination(attackers, validDeffenders);
+            var selectedDeffOption = defenseoptions[0].Count==0?defenseoptions[3]:defenseoptions[0];
+            if(selectedDeffOption.Count > 0)
             {
-                foreach (Creature _deffender in validDeffenders) 
+                foreach (var deffend in selectedDeffOption)
                 {
-                    if (creaturesToDeclareAsDeffenders.Count == 1) break;
-                    if (creaturesToDeclareAsDeffenders.ContainsKey(_deffender)) continue;
-                
-                    if(_deffender.CurrentHealth > _attacker.CurrentAttack)
-                    {
-                        creaturesToDeclareAsDeffenders.Add(_deffender,_attacker);
-                        Console.WriteLine($">> Deffence :[{ CombatField.IndexOf(_deffender)}]-[{Opponent.CombatField.IndexOf(_attacker)}] {_deffender.Name} [{_deffender.CurrentAttack}/{_deffender.CurrentHealth}]");
-                    }
+                    string your = $" [You] { deffend.Key.Name} ({ deffend.Key.CurrentAttack}/{ deffend.Key.CurrentHealth})".PadRight(35);
+                    string enemy = $" ({ deffend.Value.CurrentAttack}/{ deffend.Value.CurrentHealth}) { deffend.Value.Name} [Enemy]".PadLeft(35);
+                    Console.WriteLine($">> Obrona: {your} vs {enemy} ");
                 }
             }
+            else
+            {
+                Console.WriteLine(">> Obrona: Przyjęcie obrażeń na klate xD");
 
-            return creaturesToDeclareAsDeffenders;
+            }
+            return selectedDeffOption;
         }
 
         public Creature[] GetCreaturesFromField(int[] indexes, bool validated = false)
