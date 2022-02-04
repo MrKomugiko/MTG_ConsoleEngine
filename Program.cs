@@ -39,6 +39,11 @@ Enumerable.Range(0, 14).ToList().ForEach(x => {
     TEST_DECK_2.Add(Land_Factory.Get_Swamp());
 });
 
+for(int i = 0; i < 10; i++)
+{
+    TEST_DECK[i].ID = i;
+    TEST_DECK_2[i].ID = i;
+}
 
 //B: Run stuff you want timed
 

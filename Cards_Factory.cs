@@ -47,6 +47,45 @@ namespace MTG_ConsoleEngine
             creature.AddSpecialAction($"Lifelink, haste");
             return creature;
         }
+        public static Creature Get_EpicureOfBlood()
+        {
+            var creature = new Creature
+            (
+                _manaCost: new Dictionary<string, int>() { { "",4 },{ "B", 1 } },
+                _identificator: "095_M19",
+                _name: "Epicure of Blood",
+                _category: "Vampire",
+                _description: "'Fleshy, wish just a hint of leather. A fine vintage.'",
+                _health: 4,
+                _attack: 4
+            );
+            //TODO: not implemented
+            creature.AddSpecialAction($"Whenever you gain life, each opponent loses 1 life");
+            return creature;
+        }
+        public static Creature Get_FellSpecter()
+        {
+            var creature = new Creature
+            (
+                _manaCost: new Dictionary<string, int>() { { "", 4 }, { "B", 1 } },
+                _identificator: "096_M19",
+                _name: "Fell Specter",
+                _category: "Specter",
+                _description: "'Fleshy, wish just a hint of leather. A fine vintage.'",
+                _health: 3,
+                _attack: 1
+            );
+
+            //TODO: not implemented
+            creature.AddSpecialAction($"Flying");
+            //TODO: not implemented
+            creature.AddSpecialAction($"When Fell Specter enters the battlefield, target opponent discard a card.");
+            //TODO: not implemented
+            creature.AddSpecialAction($"Whenever an opponent discards a card, that player loses 2 life.");
+
+
+            return creature;
+        }
     }
     public  static class Land_Factory
     {

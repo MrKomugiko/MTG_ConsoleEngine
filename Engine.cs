@@ -16,20 +16,6 @@ namespace MTG_ConsoleEngine
         public bool logs = true;
         public Engine(Player FirstPlayer, Player SecondPlayer)
         {
-            /*
-                StartNewGame = 0,
-                Beginning_Phase = 1,
-                First_Main_Phase = 2,
-                Combat_Phase_Begining = 3,
-                Combat_Phase_AttackersDeclaration = 4,
-                Combat_Phase_DefendersDeclaration = 5,
-                Combat_Phase_AttackerInstants = 6,
-                Combat_Phase_DeffenderInstants = 7,
-                Combat_Phase_Combat = 8,
-                Combat_Phase_End = 9,
-                Second_Main_Phase = 10,
-                End_Phase = 11
-             */
 
             GamePhases.Add(Beginning_Phase);
             GamePhases.Add(First_Main_Phase);
@@ -78,9 +64,9 @@ namespace MTG_ConsoleEngine
                 {
                     if (Players[CurrentPlayerIndex].Health <= 0)
                     {
-                        //Console.WriteLine("End of Game:");
-                        //Console.WriteLine("Player 1 HP:" + Players[0].Health);
-                        //Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                        Console.WriteLine("end of game:");
+                        Console.WriteLine("player 1 hp:" + Players[0].Health);
+                        Console.WriteLine("player 2 hp:" + Players[1].Health);
                         gameEnded = true;
                         return;
                        
@@ -90,12 +76,12 @@ namespace MTG_ConsoleEngine
 
                 CurrentPlayerIndex = CurrentPlayerIndex == 0 ? 1 : 0;
                 TurnCounter++;
-               // Console.WriteLine("Turn: " + TurnCounter);
-                //if (logs)
-                //{
-                //    Console.WriteLine("Player 1 HP:" + Players[0].Health);
-                //    Console.WriteLine("Player 2 HP:" + Players[1].Health);
-                //}
+                    Console.WriteLine("Turn: " + TurnCounter);
+                if (logs)
+                {
+                    Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                    Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                }
             };
         }
 
@@ -208,7 +194,7 @@ namespace MTG_ConsoleEngine
                 //Console.WriteLine(" - Declare Blockers Step - Player "+_player.Opponent.PlayerNumberID);  // drugi gracz
                 if(_player.Opponent.IsAI)
                 {
-                    DeclaredDeffenders = _player.AI_RandomDeffendersDeclaration();
+                    DeclaredDeffenders = _player.Opponent.AI_RandomDeffendersDeclaration();
                 }
                 else
                 {

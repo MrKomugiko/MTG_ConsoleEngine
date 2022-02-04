@@ -88,7 +88,7 @@ namespace MTG_ConsoleEngine
 
             return possibleAttackers;
         } 
-        private List<Creature> Get_AvailableDeffenders() {
+        public List<Creature> Get_AvailableDeffenders() {
             var possibleDefenders = CombatField.Where(x=>x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
             if(possibleDefenders.Count == 0) return new();
 

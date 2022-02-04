@@ -4,6 +4,8 @@ namespace MTG_ConsoleEngine
 {
     public abstract class CardBase 
     {
+        public int ID;
+
         public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
 
         public readonly string Identificator; // 128_M21
