@@ -119,7 +119,7 @@ namespace MTG_ConsoleEngine
                                 creatureManaCostCopy[""] -= noCoreLand.manaValue.First().Value;
                                 landCardsToTap.Add(noCoreLand);
                             }
-                            foreach (Land coreLand in currentLandsCardsCopy.Except(landCardsToTap))
+                            foreach (Land coreLand in currentLandsCardsCopy.Except(landCardsToTap).ToList())
                             {
                                 if (creatureManaCostCopy[""] == 0) break;
                                 SumManaOwnedAndAvailable[coreLand.manaValue.First().Key] -= coreLand.manaValue.First().Value;

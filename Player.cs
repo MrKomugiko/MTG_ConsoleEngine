@@ -74,12 +74,12 @@ namespace MTG_ConsoleEngine
             //Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
           //  Console.ResetColor();
         }
-        public List<Creature> Get_AvailableAttackers() {
+        public Creature[] Get_AvailableAttackers() {
 
-            var possibleAttackers = CombatField.Where(x=> x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
-            if(possibleAttackers.Count == 0) {
+            var possibleAttackers = CombatField.Where(x=> x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToArray();
+            if(possibleAttackers.Length == 0) {
                 //Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
-                return new();
+                return Array.Empty<Creature>();
             }
             //Console.WriteLine("dostępne kreatury do ataku: ");
             //possibleAttackers.ForEach(x =>
@@ -100,19 +100,19 @@ namespace MTG_ConsoleEngine
 
         }
        
-        public List<Creature> SelectAttackers_HumanInteraction()
+        public Creature[] SelectAttackers_HumanInteraction()
         {
             TryAgain:
           //  Console.ForegroundColor = color;
             DisplayPlayerField();
          //   Console.WriteLine("Wybierz atakujących z dostępnych kreatur na polu: [ indexy oddzielaj przecinkiem: 0,1,3... ]");
             // TODO: zrobic kopie tej metody dla automatycznej odpowiedzi ze strony AI
-            List<Creature> availableTargets = Get_AvailableAttackers();
-            if(availableTargets.Count == 0) return new();
+            Creature[] availableTargets = Get_AvailableAttackers();
+            if(availableTargets.Length == 0) return Array.Empty<Creature>();
 
             string input = Console.ReadLine()??"";
             //Console.ResetColor();
-            if(String.IsNullOrEmpty(input)) return new();
+            if(String.IsNullOrEmpty(input)) return Array.Empty<Creature>();
 
             List<string> attackers = input.Trim().Split(",").ToList();
             
@@ -173,14 +173,15 @@ namespace MTG_ConsoleEngine
                 return new();
             }
             
-            return InputHelper.Input_DefendersDeclaration(_gameEngine, DeclaredAttackers, availableDeffenders, PlayerIndex /* index */);
+            return InputHelper.Input_DefendersDeclaration(_gameEngine, DeclaredAttackers.ToList(), availableDeffenders, PlayerIndex /* index */);
         }
         public bool PlayCardFromHand(CardBase card)
         {
-           // Console.ForegroundColor = color;
-          //  Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
-            (bool status, int playerIndex, int creatureIndex) playerResponse = (false,-1,-1);
-            switch(card)
+            // Console.ForegroundColor = color;
+           // Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
+            (bool status, int playerIndex, int creatureIndex) playerResponse = (false, -1, -1);
+
+            switch (card)
             {
                 case Creature c:  
                     if(! c.CardSpecialActions.Any(x=>x.description == "Haste"))
@@ -226,9 +227,9 @@ namespace MTG_ConsoleEngine
                     break;
 
                 case Instant i:
-                    List<object> availableTargets = _gameEngine.GetValidTargetsForCardType(i);
+                    //List<object> availableTargets = _gameEngine.GetValidTargetsForCardType(i);
 
-                    if(availableTargets.Count == 0) return false;
+                    //if(availableTargets.Count == 0) return false;
 
                   //  Console.WriteLine($"[{this.PlayerIndex}] => Your Combat field Cards:");
                     this.DisplayPlayerField();
@@ -250,7 +251,7 @@ namespace MTG_ConsoleEngine
                     break;
             }
             //Console.WriteLine("zapłąc za karte / usun ją z ręki");
-            card.CheckAvailability().landsToTap.ForEach(c => c.isTapped = true);
+            //card.CheckAvailability().landsToTap.ForEach(c => c.isTapped = true);
             Hand.Remove(card);
             //Console.ResetColor();
             return true;

@@ -31,7 +31,7 @@ namespace MTG_ConsoleEngine.Card_Category
                 {
                     _currentHealth = 0; 
 
-                    Console.WriteLine($"{Name} died...");
+                   // Console.WriteLine($"{Name} died...");
 
                     // sprawdzenie czy ma na sobie enchantmenty
                     if(EnchantmentSlots.Count > 0)

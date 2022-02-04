@@ -8,7 +8,7 @@ namespace MTG_ConsoleEngine
         public Player Player_2 { get; internal set; }
         public int TurnCounter { get; internal set; }
         public Engine.PhaseType LastGamePhase { get; internal set; }
-        public List<Creature> DeclaredAttackers { get; internal set; }
+        public Creature[] DeclaredAttackers { get; internal set; }
         public Dictionary<Creature, Creature> DeclaredDeffenders { get; internal set; }
 
         

@@ -9,7 +9,7 @@ namespace MTG_ConsoleEngine
 
         public readonly Player[] Players = new Player[2];
         public PhaseType CurrentPhase { get; set; }
-        public List<Creature> DeclaredAttackers = new();
+        public Creature[] DeclaredAttackers;
         public Dictionary<Creature,Creature> DeclaredDeffenders = new(); // <obrońca / atakujacy> , bo mozna blokowac kilkoma stworkami
         private int TurnCounter = 0;
         public int CurrentPlayerIndex = 0;
@@ -44,7 +44,7 @@ namespace MTG_ConsoleEngine
 
         }
 
-        public List<Creature> GetAttackerDeclaration() => DeclaredAttackers;
+        public Creature[] GetAttackerDeclaration() => DeclaredAttackers;
         public Dictionary<Creature,Creature> GetDeffendersDeclaration() => DeclaredDeffenders;
         
         public void Start()
@@ -54,8 +54,11 @@ namespace MTG_ConsoleEngine
             ShuffleDeck(Players[0]);
             ShuffleDeck(Players[1]);
 
-            for(int i = 0;i<7;i++) Players[0].DrawCard();
-            for(int i = 0;i<7;i++) Players[1].DrawCard();
+            for (int i = 0; i < 7; i++)
+            {
+                Players[0].DrawCard();
+                Players[1].DrawCard();
+            }
 
             TurnCounter = 0;
             CurrentPlayerIndex = 0;
@@ -68,30 +71,31 @@ namespace MTG_ConsoleEngine
 
         public void RunGameLoop(ref bool gameEnded)
         {
+            int gamephaselenght = GamePhases.Count;
             while (true)
             {
-                foreach (var Phase in GamePhases)
+                for (int i = 0; i < gamephaselenght; i++)
                 {
                     if (Players[CurrentPlayerIndex].Health <= 0)
                     {
-                       // Console.WriteLine("End of Game:");
-                       // Console.WriteLine("Player 1 HP:" + Players[0].Health);
-                       // Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                        //Console.WriteLine("End of Game:");
+                        //Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                        //Console.WriteLine("Player 2 HP:" + Players[1].Health);
                         gameEnded = true;
                         return;
                        
                     }
-                    Phase(Players[CurrentPlayerIndex]);
+                    GamePhases[i](Players[CurrentPlayerIndex]);
                 }
 
                 CurrentPlayerIndex = CurrentPlayerIndex == 0 ? 1 : 0;
                 TurnCounter++;
-             //   Console.WriteLine("Turn: " + TurnCounter);
-              //  if(logs)
-              //  {
-              //      Console.WriteLine("Player 1 HP:" + Players[0].Health);
-              //      Console.WriteLine("Player 2 HP:" + Players[1].Health);
-              //  }
+               // Console.WriteLine("Turn: " + TurnCounter);
+                //if (logs)
+                //{
+                //    Console.WriteLine("Player 1 HP:" + Players[0].Health);
+                //    Console.WriteLine("Player 2 HP:" + Players[1].Health);
+                //}
             };
         }
 
@@ -107,6 +111,7 @@ namespace MTG_ConsoleEngine
 
                 Console.WriteLine(" - Untap Step [ DONE ]");
             }
+            
             _player.CombatField.ForEach(card => card.isTapped = false);
             _player.ManaField.ForEach(card => card.isTapped = false);
             if (logs)
@@ -134,7 +139,6 @@ namespace MTG_ConsoleEngine
             }
             if (_player.IsAI)
             {
-                _player.AI_PlayLandCardIfPossible();
                 _player.AI_MakePlaysWithRandomCardFromHand();
                 return;
             }
@@ -189,7 +193,7 @@ namespace MTG_ConsoleEngine
             CurrentPhase = PhaseType.Combat_Phase_AttackersDeclaration;
             if (_player.IsAI)
             {
-                _player.AI_RandomAttackDeclaration();
+                DeclaredAttackers = _player.AI_RandomAttackDeclaration();
             }
             else
             {
@@ -199,7 +203,7 @@ namespace MTG_ConsoleEngine
 
             #region Combat_Phase_DeffendersDeclaration
             CurrentPhase = PhaseType.Combat_Phase_DefendersDeclaration;
-            if (DeclaredAttackers.Count > 0)
+            if (DeclaredAttackers.Length > 0)
             {   
                 //Console.WriteLine(" - Declare Blockers Step - Player "+_player.Opponent.PlayerNumberID);  // drugi gracz
                 if(_player.Opponent.IsAI)
@@ -208,7 +212,8 @@ namespace MTG_ConsoleEngine
                 }
                 else
                 {
-                /* <DEFFENDER, ATTACKER> */ DeclaredDeffenders = _player.Opponent.SelectDeffenders_HumanInteraction();
+                /* <DEFFENDER, ATTACKER> */ 
+                    DeclaredDeffenders = _player.Opponent.SelectDeffenders_HumanInteraction();
                 }
 
             }
@@ -242,8 +247,8 @@ namespace MTG_ConsoleEngine
             #region Combat_Phase_Combat
             CurrentPhase = PhaseType.Combat_Phase_Combat;
             ExecuteCombat();
-           
-            DeclaredAttackers.Clear();
+
+            Array.Clear(DeclaredAttackers);
             DeclaredDeffenders.Clear();
 
             // ewentualne wyłączenie enczantow 
@@ -278,7 +283,6 @@ namespace MTG_ConsoleEngine
 
             if (_player.IsAI)
             {
-                _player.AI_PlayLandCardIfPossible();
                 _player.AI_MakePlaysWithRandomCardFromHand();
                 return;
             }
@@ -349,7 +353,7 @@ namespace MTG_ConsoleEngine
                 if(DeclaredDeffenders.Any(x=>x.Value == attacker))
                 {
                     if(attacker.CurrentHealth <= 0) {
-                        Console.WriteLine("Atakujaca jednostka juz nie zyje, walka pominięta");
+                       // Console.WriteLine("Atakujaca jednostka juz nie zyje, walka pominięta");
                         continue;
                     }
                     foreach(var defender in DeclaredDeffenders.Where(x=>x.Value == attacker))
@@ -357,21 +361,21 @@ namespace MTG_ConsoleEngine
                         defendersHpBeforeCombat.Add(attacker.CurrentHealth);
                         // pomin w przypadku gdy deffender juz ni e zyje xd
 
-                        Console.WriteLine($"Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
+                        //Console.WriteLine($"Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
                         
                         if(defender.Key.CurrentHealth <= 0) continue;
 
                         attacker.Attack(defender.Key);
                     }
 
-                    Console.WriteLine("---- wynik potyczki ----");
-                    Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
-                    int index = 0;
-                    foreach(var defender in DeclaredDeffenders.Where(x=>x.Key == attacker))
-                    {
-                        Console.WriteLine($"{(defender.Key.CurrentHealth <= 0?"DEAD":(defender.Key.CurrentHealth < defendersHpBeforeCombat[index])?"DAMAGED":"UNTOUCHED")} Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
-                        index++;
-                    }
+                   // Console.WriteLine("---- wynik potyczki ----");
+                   // Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
+                  //  int index = 0;
+                   // foreach(var defender in DeclaredDeffenders.Where(x=>x.Key == attacker))
+                   // {
+                    //    Console.WriteLine($"{(defender.Key.CurrentHealth <= 0?"DEAD":(defender.Key.CurrentHealth < defendersHpBeforeCombat[index])?"DAMAGED":"UNTOUCHED")} Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
+                   //     index++;
+                  //  }
                 }
                 attacker.Attack(_defender:null);
 
@@ -461,7 +465,7 @@ namespace MTG_ConsoleEngine
             {
                 var corpse = DeadCreatures[i];
                 _player.CombatField.Remove(corpse);
-                Console.WriteLine($"send {corpse.Name} to Graveyard...");
+                //Console.WriteLine($"send {corpse.Name} to Graveyard...");
                 corpse.Owner.Graveyard.Add(corpse);
                 corpse.Owner.CombatField.Remove(corpse);    
             }
