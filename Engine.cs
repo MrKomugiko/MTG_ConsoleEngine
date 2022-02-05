@@ -2,19 +2,9 @@ using MTG_ConsoleEngine.Card_Category;
 
 namespace MTG_ConsoleEngine
 {
-    public partial class Engine
+    public class Engine : EngineBase
     {
-        private delegate void Phase(Player _player);
-        private List<Phase> GamePhases = new();
-
-        public readonly Player[] Players = new Player[2];
-        public PhaseType CurrentPhase { get; set; }
-        public Creature[] DeclaredAttackers;
-        public Dictionary<Creature,Creature> DeclaredDeffenders = new(); // <obrońca / atakujacy> , bo mozna blokowac kilkoma stworkami
-        private int TurnCounter = 0;
-        public int CurrentPlayerIndex = 0;
-        public bool logs = true;
-        public Engine(Player FirstPlayer, Player SecondPlayer)
+        public Engine(PlayerBase FirstPlayer, PlayerBase SecondPlayer)
         {
 
             GamePhases.Add(Beginning_Phase);
@@ -30,10 +20,8 @@ namespace MTG_ConsoleEngine
 
         }
 
-        public Creature[] GetAttackerDeclaration() => DeclaredAttackers;
-        public Dictionary<Creature,Creature> GetDeffendersDeclaration() => DeclaredDeffenders;
-        
-        public void Start()
+      
+        public override void Start()
         {
             #region StartNewGame
             CurrentPhase = PhaseType.StartNewGame;
@@ -54,8 +42,7 @@ namespace MTG_ConsoleEngine
             bool gameEnded = false;
             RunGameLoop(ref gameEnded);
         }
-
-        public void RunGameLoop(ref bool gameEnded)
+        public override void RunGameLoop(ref bool gameEnded)
         {
             int gamephaselenght = GamePhases.Count;
             while (true)
@@ -69,14 +56,14 @@ namespace MTG_ConsoleEngine
                         Console.WriteLine("player 2 hp:" + Players[1].Health);
                         gameEnded = true;
                         return;
-                       
+
                     }
                     GamePhases[i](Players[CurrentPlayerIndex]);
                 }
 
                 CurrentPlayerIndex = CurrentPlayerIndex == 0 ? 1 : 0;
                 TurnCounter++;
-                    Console.WriteLine("Turn: " + TurnCounter);
+                Console.WriteLine("Turn: " + TurnCounter);
                 if (logs)
                 {
                     Console.WriteLine("Player 1 HP:" + Players[0].Health);
@@ -84,22 +71,21 @@ namespace MTG_ConsoleEngine
                 }
             };
         }
-
-        public void Beginning_Phase(Player _player)
+        public override void Beginning_Phase(PlayerBase _player)
         {
             #region Begining_Phase
             CurrentPhase = PhaseType.Beginning_Phase;
-            if(logs)
+            if (logs)
             {
                 Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
-                Console.WriteLine($"║    {("[Turn:"+TurnCounter+"]").PadRight(11)}             Beginning_Phase: Player {_player.PlayerNumberID}                           ║");
+                Console.WriteLine($"║    {"[Turn:" + TurnCounter + "]",-11}             Beginning_Phase: Player {_player.PlayerNumberID}                           ║");
                 Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
 
                 Console.WriteLine(" - Untap Step [ DONE ]");
             }
-            
-            _player.CombatField.ForEach(card => card.isTapped = false);
-            _player.ManaField.ForEach(card => card.isTapped = false);
+
+            _player.CombatField.ForEach(card => card.IsTapped = false);
+            _player.ManaField.ForEach(card => card.IsTapped = false);
             if (logs)
             {
                 Console.WriteLine(" - Upkeep Step [Work In Progress]");
@@ -107,13 +93,13 @@ namespace MTG_ConsoleEngine
                 Console.WriteLine(" - Draw step [ DONE ]");
             }
 
-            if(TurnCounter >= 2)
+            if (TurnCounter >= 2)
             {
                 _player.DrawCard();
             }
             #endregion
         }
-        public void First_Main_Phase(Player _player)
+        public override void First_Main_Phase(PlayerBase _player)
         {
             #region First_Main_Phase
             CurrentPhase = PhaseType.First_Main_Phase;
@@ -125,42 +111,40 @@ namespace MTG_ConsoleEngine
             }
             if (_player.IsAI)
             {
-                _player.AI_MakePlaysWithRandomCardFromHand();
+                ((PlayerAI)_player).AI_MakePlaysWithRandomCardFromHand();
                 return;
             }
 
-            while(true)
+            while (true)
             {
-                Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
-                handdata = _player.Get_and_DisplayPlayerHand();
-                
-                var input = Console.ReadLine()??"";
-                if(String.IsNullOrEmpty(input)) break;
-                
-                int choosenIndex;
-                if(Int32.TryParse(input, out choosenIndex) == false) continue;
-                if(choosenIndex >= handdata.Count)
+                Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
+                handdata = ((Player)_player).Get_and_DisplayPlayerHand();
+
+                var input = Console.ReadLine() ?? "";
+                if (String.IsNullOrEmpty(input)) break;
+
+                if (Int32.TryParse(input, out int choosenIndex) == false) continue;
+                if (choosenIndex >= handdata.Count)
                 {
                     Console.WriteLine("niewłasciwy index");
                     continue;
                 }
 
-                if(handdata[choosenIndex].result == false)
+                if (handdata[choosenIndex].result == false)
                 {
                     Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
                 }
 
-                if(_player.PlayCardFromHand(_player.Hand[choosenIndex]))
+                if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                 {
                     Console.WriteLine("zapłąc za karte");
-                    handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
+                    handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).IsTapped = true);
                 }
             }
             #endregion
         }
-
-        public void Combat_Phase(Player _player)
+        public override void Combat_Phase(PlayerBase _player)
         {
             #region Combat_Phase_Begining
             CurrentPhase = PhaseType.Combat_Phase_Begining;
@@ -179,27 +163,27 @@ namespace MTG_ConsoleEngine
             CurrentPhase = PhaseType.Combat_Phase_AttackersDeclaration;
             if (_player.IsAI)
             {
-                DeclaredAttackers = _player.AI_RandomAttackDeclaration();
+                DeclaredAttackers = ((PlayerAI)_player).AI_RandomAttackDeclaration();
             }
             else
             {
-                DeclaredAttackers = _player.SelectAttackers_HumanInteraction();
+                DeclaredAttackers = ((Player)_player).SelectAttackers_HumanInteraction();
             }
             #endregion
 
             #region Combat_Phase_DeffendersDeclaration
             CurrentPhase = PhaseType.Combat_Phase_DefendersDeclaration;
             if (DeclaredAttackers.Length > 0)
-            {   
+            {
                 //Console.WriteLine(" - Declare Blockers Step - Player "+_player.Opponent.PlayerNumberID);  // drugi gracz
-                if(_player.Opponent.IsAI)
+                if (_player.Opponent.IsAI)
                 {
-                    DeclaredDeffenders = _player.Opponent.AI_RandomDeffendersDeclaration();
+                    DeclaredDeffenders = ((PlayerAI)_player.Opponent).AI_RandomDeffendersDeclaration();
                 }
                 else
                 {
-                /* <DEFFENDER, ATTACKER> */ 
-                    DeclaredDeffenders = _player.Opponent.SelectDeffenders_HumanInteraction();
+                    /* <DEFFENDER, ATTACKER> */
+                    DeclaredDeffenders = ((Player)_player.Opponent).SelectDeffenders_HumanInteraction();
                 }
 
             }
@@ -210,7 +194,7 @@ namespace MTG_ConsoleEngine
             CurrentPhase = PhaseType.Combat_Phase_AttackerInstants;
             if (_player.IsAI)
             {
-                _player.AI_PlayRandomInstatFromHand();
+                ((PlayerAI)_player).AI_PlayRandomInstatFromHand();
             }
             else
             {
@@ -222,7 +206,7 @@ namespace MTG_ConsoleEngine
             CurrentPhase = PhaseType.Combat_Phase_DeffenderInstants;
             if (_player.Opponent.IsAI)
             {
-                _player.Opponent.AI_PlayRandomInstatFromHand();
+                ((PlayerAI)_player.Opponent).AI_PlayRandomInstatFromHand();
             }
             else
             {
@@ -254,7 +238,7 @@ namespace MTG_ConsoleEngine
             }
             #endregion
         }
-        public void Second_Main_Phase(Player _player)
+        public override void Second_Main_Phase(PlayerBase _player)
         {
             #region Second_Main_Phase
             CurrentPhase = PhaseType.Second_Main_Phase;
@@ -265,28 +249,28 @@ namespace MTG_ConsoleEngine
                 Console.WriteLine($"╚════════════════════════════════════════════════════════════════════════════════╝");
             }
             //Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
-            Dictionary<int,(bool result,List<CardBase> landsToTap)> handdata = new();
+            Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
 
             if (_player.IsAI)
             {
-                _player.AI_MakePlaysWithRandomCardFromHand();
+                ((PlayerAI)_player).AI_MakePlaysWithRandomCardFromHand();
                 return;
             }
 
             while (true)
             {
-                handdata = _player.Get_and_DisplayPlayerHand();
-                
-                var input = Console.ReadLine()??"";
-                if(String.IsNullOrEmpty(input)) break;
-                
-                int choosenIndex;
-                if(Int32.TryParse(input, out choosenIndex) == false) 
+                handdata = ((Player)_player).Get_and_DisplayPlayerHand();
+
+                var input = Console.ReadLine() ?? "";
+                if (String.IsNullOrEmpty(input)) break;
+
+                 
+                if (Int32.TryParse(input, out int choosenIndex) == false)
                 {
-                    
+
                     continue;
                 }
-                if(handdata[Int32.Parse(input)].result == false)
+                if (handdata[Int32.Parse(input)].result == false)
                 {
                     Console.WriteLine("nie mozesz zagrać tej karty i / lub nie stac cie");
                     continue;
@@ -294,12 +278,12 @@ namespace MTG_ConsoleEngine
 
                 if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                 {
-                    handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
+                    handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).IsTapped = true);
                 }
             }
             #endregion
         }
-        public void End_Phase(Player _player)
+        public override void End_Phase(PlayerBase _player)
         {
             #region End_Phase
             CurrentPhase = PhaseType.End_Phase;
@@ -328,98 +312,141 @@ namespace MTG_ConsoleEngine
             #endregion
         }
 
-      
-        private void ExecuteCombat()
+
+        public override List<object> GetValidTargetsForCardType(CardBase card)
         {
-            foreach(var attacker in DeclaredAttackers) /* <DEFFENDER, ATTACKER> */
+            if (card is Instant instant)
+            {
+                // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
+                Console.WriteLine("Get valid targets for Enchantment: " + instant.Name);
+                List<object> targets = new();
+
+                var player1Creatures = Players[0].CombatField.Where(x => x is Creature).ToList();
+                var player2Creatures = Players[1].CombatField.Where(x => x is Creature).ToList();
+
+                player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
+                player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
+
+                targets.AddRange(player1Creatures);
+                targets.AddRange(player2Creatures);
+
+                return targets;
+            }
+            if (card is Enchantment enchantment)
+            {
+                // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
+                Console.WriteLine("Get valid targets for Enchantment: " + enchantment.Name);
+                List<object> targets = new();
+
+                var player1Creatures = Players[0].CombatField.Where(x => x is Creature).ToList();
+                var player2Creatures = Players[1].CombatField.Where(x => x is Creature).ToList();
+
+                player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
+                player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
+
+                targets.AddRange(player1Creatures);
+                targets.AddRange(player2Creatures);
+
+                if (targets.Count == 0)
+                {
+                    Console.WriteLine("Brak dostępnych celów użycia karty...");
+                }
+                return targets;
+            }
+
+            return new();
+        }
+
+
+        protected override void ExecuteCombat()
+        {
+            foreach (var attacker in DeclaredAttackers) /* <DEFFENDER, ATTACKER> */
             {
                 int attackerMaxHP = attacker.CurrentHealth;
                 List<int> defendersHpBeforeCombat = new();
-                //Console.WriteLine($"Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
-                if(DeclaredDeffenders.Any(x=>x.Value == attacker))
+                Console.WriteLine($"Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
+                if (DeclaredDeffenders.Any(x => x.Value == attacker))
                 {
-                    if(attacker.CurrentHealth <= 0) {
-                       // Console.WriteLine("Atakujaca jednostka juz nie zyje, walka pominięta");
+                    if (attacker.CurrentHealth <= 0)
+                    {
+                        Console.WriteLine("Atakujaca jednostka juz nie zyje, walka pominięta");
                         continue;
                     }
-                    foreach(var defender in DeclaredDeffenders.Where(x=>x.Value == attacker))
+
+                    foreach (var defender in DeclaredDeffenders.Where(x => x.Value == attacker))
                     {
                         defendersHpBeforeCombat.Add(attacker.CurrentHealth);
                         // pomin w przypadku gdy deffender juz ni e zyje xd
 
-                        //Console.WriteLine($"Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
-                        
-                        if(defender.Key.CurrentHealth <= 0) continue;
+                        Console.WriteLine($"Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
+
+                        if (defender.Key.CurrentHealth <= 0) continue;
 
                         attacker.Attack(defender.Key);
                     }
 
-                   // Console.WriteLine("---- wynik potyczki ----");
-                   // Console.WriteLine($"{(attacker.CurrentHealth <= 0?"DEAD":(attacker.CurrentHealth < attackerMaxHP)?"DAMAGED":"UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
-                  //  int index = 0;
-                   // foreach(var defender in DeclaredDeffenders.Where(x=>x.Key == attacker))
-                   // {
-                    //    Console.WriteLine($"{(defender.Key.CurrentHealth <= 0?"DEAD":(defender.Key.CurrentHealth < defendersHpBeforeCombat[index])?"DAMAGED":"UNTOUCHED")} Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
-                   //     index++;
-                  //  }
-                }
-                attacker.Attack(_defender:null);
+                    Console.WriteLine("---- wynik potyczki ----");
+                    Console.WriteLine($"{(attacker.CurrentHealth <= 0 ? "DEAD" : (attacker.CurrentHealth < attackerMaxHP) ? "DAMAGED" : "UNTOUCHED")} Atakująca kreatura {attacker.Name} [ATK:{attacker.CurrentAttack} HP:{attacker.CurrentHealth}]");
+                    int index = 0;
+                    foreach (var defender in DeclaredDeffenders.Where(x => x.Value == attacker))
+                    {
+                        Console.WriteLine($"{(defender.Key.CurrentHealth <= 0 ? "DEAD" : (defender.Key.CurrentHealth < defendersHpBeforeCombat[index]) ? "DAMAGED" : "UNTOUCHED")} Broniąca kreatura {defender.Key.Name} [ATK:{defender.Key.CurrentAttack} HP:{defender.Key.CurrentHealth}]");
+                        index++;
+                    }
 
-               // Console.WriteLine();
+                }
+                attacker.Attack(_defender: null);
+
+                Console.WriteLine();
             }
         }
-        private void HandCardsCleanUpCountChecker(Player _player)
+        protected override void HandCardsCleanUpCountChecker(PlayerBase _player)
         {
-            if(TurnCounter < 2) return;
+            if (TurnCounter < 2) return;
 
-            while(_player.Hand.Count >= 7)
+            while (_player.Hand.Count >= 7)
             {
-                if( _player.IsAI)
+                if (_player.IsAI)
                 {
-                    _player.AI_RemoveOneCardFromHand();
+                    ((PlayerAI)_player).AI_RemoveOneCardFromHand();
                     continue;
                 }
 
-                _player.Get_and_DisplayPlayerHand();
+                 ((Player)_player).Get_and_DisplayPlayerHand();
                 Console.WriteLine($"Wyrzuć {_player.Hand.Count - 6} kart, podaj indexy 0,1,2..");
                 var cardsToRemove = Console.ReadLine();
 
-                if(String.IsNullOrEmpty(cardsToRemove) == false)
+                if (String.IsNullOrEmpty(cardsToRemove) == false)
                 {
-                    var removearr = cardsToRemove.Split(",").Select(x=>Int32.Parse(x)).ToList();
-                    var cardsList = removearr.Select(x=>_player.Hand[x]).ToList();
-                    cardsList.ForEach(x=>
+                    var removearr = cardsToRemove.Split(",").Select(x => Int32.Parse(x)).ToList();
+                    var cardsList = removearr.Select(x => _player.Hand[x]).ToList();
+                    cardsList.ForEach(x =>
                     {
-                        Console.WriteLine("Wyrzuciłeś "+x.Name);
+                        Console.WriteLine("Wyrzuciłeś " + x.Name);
                         _player.Graveyard.Add(x);
                         _player.Hand.Remove(x);
                     });
                 }
             }
         }
-        private void RecoverHealthSurvivedCreatures()
+        protected void CastInstantIfCan(PlayerBase _player)
         {
-            Players[0].CombatField.ForEach(creature => ((Creature)creature).ResetStatsAfterFight());
-        }
-        private void CastInstantIfCan(Player _player)
-        {
-            if (_player.Hand.Any(x => (x is Instant) && ((Instant)x).isAbleToPlay))
+            if (_player.Hand.Any(x => (x is Instant instant) && instant.IsAbleToPlay))
             {
                 Console.WriteLine($"Szana na kontre uzywajac instantów lub umiejetnosci kart gracz {_player.PlayerNumberID}");
-                Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");   
-                
+                Console.WriteLine("---------------- INSTANTS ONLY ---------------- ");
+
                 Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
 
                 while (true)
                 {
 
-                    handdata = _player.Get_and_DisplayPlayerHand();
+                    handdata = ((Player)_player).Get_and_DisplayPlayerHand();
 
                     var input = Console.ReadLine() ?? "";
                     if (String.IsNullOrEmpty(input)) break;
 
-                    int choosenIndex;
-                    if (Int32.TryParse(input, out choosenIndex) == false)
+                    if (Int32.TryParse(input, out int choosenIndex) == false)
                     {
                         continue;
                     }
@@ -429,7 +456,7 @@ namespace MTG_ConsoleEngine
                         continue;
                     }
 
-                    if(_player.Hand[choosenIndex] is Instant == false)
+                    if (_player.Hand[choosenIndex] is Instant == false)
                     {
                         Console.WriteLine("Wybierz kartę typu instant, enter zeby anulowac");
                         continue;
@@ -438,25 +465,25 @@ namespace MTG_ConsoleEngine
                     if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                     {
                         Console.WriteLine("zapłąc za karte");
-                        handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).isTapped = true);
+                        handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).IsTapped = true);
                     }
                 }
             }
         }
-        private void MoveDeadCreaturesToGraveyard(Player _player)
+        protected override void MoveDeadCreaturesToGraveyard(PlayerBase _player)
         {
             var DeadCreatures = _player.CombatField.Where(c => ((Creature)c).CurrentHealth <= 0).ToList();
             _player.Graveyard.AddRange(DeadCreatures);
-            for(int i = 0; i<DeadCreatures.Count; i++)
+            for (int i = 0; i < DeadCreatures.Count; i++)
             {
                 var corpse = DeadCreatures[i];
                 _player.CombatField.Remove(corpse);
                 //Console.WriteLine($"send {corpse.Name} to Graveyard...");
                 corpse.Owner.Graveyard.Add(corpse);
-                corpse.Owner.CombatField.Remove(corpse);    
+                corpse.Owner.CombatField.Remove(corpse);
             }
         }
-        private void ShuffleDeck(Player deckOwner)
+        protected override void ShuffleDeck(PlayerBase deckOwner)
         {
             var rand = new Random();
             for (var i = deckOwner.Deck.Count - 1; i > 0; i--)
@@ -466,80 +493,6 @@ namespace MTG_ConsoleEngine
                 deckOwner.Deck[i] = deckOwner.Deck[index];
                 deckOwner.Deck[index] = temp;
             }
-        }
-        
-
-       
-        public List<object> GetValidTargetsForCardType(CardBase card)
-        {
-            if(card is Instant instant)
-            {
-                // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
-                Console.WriteLine("Get valid targets for Enchantment: "+instant.Name);
-                List<object> targets = new();
-            
-                var player1Creatures = Players[0].CombatField.Where(x=>x is Creature).ToList();
-                var player2Creatures = Players[1].CombatField.Where(x=>x is Creature).ToList();
-                
-                player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-                player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
-
-                targets.AddRange(player1Creatures);
-                targets.AddRange(player2Creatures);
-
-                return targets;
-            }
-            if(card is Enchantment enchantment)
-            {
-                     // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
-                Console.WriteLine("Get valid targets for Enchantment: "+enchantment.Name);
-                List<object> targets = new();
-            
-                var player1Creatures = Players[0].CombatField.Where(x=>x is Creature).ToList();
-                var player2Creatures = Players[1].CombatField.Where(x=>x is Creature).ToList();
-                
-                player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-                player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
-
-                targets.AddRange(player1Creatures);
-                targets.AddRange(player2Creatures);
-
-                if(targets.Count == 0)
-                {
-                    Console.WriteLine("Brak dostępnych celów użycia karty...");
-                }
-                return targets;
-            }
-
-            return new();
-        }
-        
-        public GameState GetGameState()
-        {
-            // zapisanie 
-            // zapisanie aktualnych stanów graczy 
-            // zapisanie numeru tury
-            // zapisanie info o ostatniego GamePhase'a
-            // zapisanie ostatniego wykonanego ruchu gracza w ostatnim GamePhasie
-
-            GameState state = new();
-
-            state.Player_1 = Players[0];
-            state.Player_2 = Players[1];
-            state.TurnCounter = this.TurnCounter;
-            state.LastGamePhase = this.CurrentPhase;
-            state.DeclaredAttackers = this.DeclaredAttackers;
-            state.DeclaredDeffenders = this.DeclaredDeffenders;
-
-            return state;
-        }
-
-        public void ContinueGameFromState(GameState state)
-        {
-            Console.WriteLine("kontynuowanie gry");
-
-           // RunGameLoop();
-
         }
     }
 }

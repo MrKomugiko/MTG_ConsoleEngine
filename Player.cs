@@ -2,29 +2,12 @@ using MTG_ConsoleEngine.Card_Category;
 
 namespace MTG_ConsoleEngine
 {
-    public partial class Player
+    public partial class Player : PlayerBase
     {
-        public readonly bool IsAI = false;
-        public Engine _gameEngine;
-        public Player Opponent;
 
-        public readonly int PlayerNumberID;
-        public readonly int PlayerIndex;
-        public readonly ConsoleColor color;
-
-        public int Health { get; internal set; } = 20;
-        public List<CardBase> ManaField {get; internal set; } = new();
-        public List<CardBase> CombatField {get; private set; } = new();
-        public List<CardBase> Hand {get; private set; } = new();
-        public List<CardBase> Deck { get; private set; } = new();
-        public List<CardBase> Graveyard { get; private set; } = new();
-        public List<CardBase> Exiled { get; private set; } = new();
-        public bool IsLandPlayedThisTurn { get; internal set; }
-
-        
-        public Player(int _number, int _health, bool _isAI = false) 
+        public Player(int _number, int _health) 
         {
-            this.IsAI = _isAI;
+            this.IsAI = false;
             this.PlayerNumberID = _number;
             this.PlayerIndex = _number==1?0:1;
 
@@ -33,38 +16,33 @@ namespace MTG_ConsoleEngine
             if(_number == 1) color = ConsoleColor.Blue;
             else color= ConsoleColor.Green;
         }
-        public void DealDamage(int value)
+        public override void DealDamage(int value)
         {
-          //  Console.BackgroundColor = ConsoleColor.DarkRed;
-         //   Console.ForegroundColor = ConsoleColor.White;
+            //  Console.BackgroundColor = ConsoleColor.DarkRed;
+            //   Console.ForegroundColor = ConsoleColor.White;
 
-           // if(value > 0)
-          //  {
-          //      Console.Write($"Player {PlayerNumberID} otrzymał {value} obrażeń. ");
-          //  }  
+            if (value > 0)
+            {
+                Console.Write($"Player {PlayerNumberID} otrzymał {value} obrażeń. ");
+            }
             Health -= value;
-            //Console.WriteLine($"Aktualne HP: {Health}");
+            Console.WriteLine($"Aktualne HP: {Health}");
           //  Console.ResetColor();
         }
-        public void Heal(int value)
+        public override void Heal(int value)
         {
-         //   Console.BackgroundColor = ConsoleColor.DarkGreen;
-         //   Console.ForegroundColor = ConsoleColor.White;
+            //   Console.BackgroundColor = ConsoleColor.DarkGreen;
+            //   Console.ForegroundColor = ConsoleColor.White;
 
-         //   if(value > 0)
-          //  {
-          //      Console.Write($"Player {PlayerNumberID} został uleczony o {value} hp.");
-          //  }  
+            if (value > 0)
+            {
+                Console.Write($"Player {PlayerNumberID} został uleczony o {value} hp.");
+            }
             Health += value;
-            //Console.WriteLine($"Aktualne HP: {Health}");
+            Console.WriteLine($"Aktualne HP: {Health}");
           //  Console.ResetColor();
         }
-        public void AddToDeck(CardBase _card)
-        {
-            _card.Owner = this;
-            Deck.Add(_card);
-        }
-        public void DrawCard()
+        public override void DrawCard()
         {
             //   Console.ForegroundColor = color;
             if (Deck.Count > 0)
@@ -72,39 +50,38 @@ namespace MTG_ConsoleEngine
                 var newCard = Deck.First();
                 Deck.Remove(newCard);
                 Hand.Add(newCard);
+                Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
             }
             else
             {
                 Console.WriteLine("PRZEGRANA - BRAK KART!");
                 Health = -666;
             }
-            //Console.WriteLine($"Player {PlayerNumberID} dobrał karte: {newCard.Name}");
             //  Console.ResetColor();
         }
-        public Creature[] Get_AvailableAttackers() {
+        public override Creature[] Get_AvailableAttackers() {
 
-            var possibleAttackers = CombatField.Where(x=> x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToArray();
+            var possibleAttackers = CombatField.Where(x=> x.IsTapped == false && x is Creature ).Select(x=>(Creature)x).ToArray();
             if(possibleAttackers.Length == 0) {
-                //Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
+                Console.WriteLine("Brak posiadanych jednostek gotowych do ataku");
                 return Array.Empty<Creature>();
             }
-            //Console.WriteLine("dostępne kreatury do ataku: ");
+           // Console.WriteLine("dostępne kreatury do ataku: ");
             //possibleAttackers.ForEach(x =>
             //        Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
             //    );
 
             return possibleAttackers;
         } 
-        public List<Creature> Get_AvailableDeffenders() {
-            var possibleDefenders = CombatField.Where(x=>x.isTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
+        public override List<Creature> Get_AvailableDeffenders() {
+            var possibleDefenders = CombatField.Where(x=>x.IsTapped == false && x is Creature ).Select(x=>(Creature)x).ToList();
             if(possibleDefenders.Count == 0) return new();
 
-          //  Console.WriteLine("Dostępne jednostki do obrony");
-          //  possibleDefenders.ForEach(x => 
-          //      Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
-          //  );
+            Console.WriteLine("Dostępne jednostki do obrony");
+            possibleDefenders.ForEach(x =>
+                Console.Write($"[{CombatField.IndexOf(x)}] Player {x.Owner.PlayerNumberID} / {x.Name} (atk:{x.CurrentAttack}/{x.CurrentHealth})\n")
+            );
             return possibleDefenders;
-
         }
        
         public Creature[] SelectAttackers_HumanInteraction()
@@ -125,10 +102,10 @@ namespace MTG_ConsoleEngine
             
             List<Creature> _attackersToDeclare = new();
             List<int> validIndexes = new();
-            int attackIndex;
+            
             foreach(var attacker in attackers)
             {
-                if(Int32.TryParse(attacker, out attackIndex))
+                if(Int32.TryParse(attacker, out int attackIndex))
                 {
                     if(attackIndex > CombatField.Count-1 || attackIndex < 0 ) {
                    //     Console.WriteLine("niepoprawny index potworka => "+attackIndex+", pominięto.");
@@ -182,7 +159,7 @@ namespace MTG_ConsoleEngine
             
             return InputHelper.Input_DefendersDeclaration(_gameEngine, DeclaredAttackers.ToList(), availableDeffenders, PlayerIndex /* index */);
         }
-        public bool PlayCardFromHand(CardBase card)
+        public override bool PlayCardFromHand(CardBase card, List<CardBase> landsToPay = null)
         {
             // Console.ForegroundColor = color;
            // Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
@@ -193,7 +170,7 @@ namespace MTG_ConsoleEngine
                 case Creature c:  
                     if(! c.CardSpecialActions.Any(x=>x.description == "Haste"))
                     {
-                        c.isTapped = true;
+                        c.IsTapped = true;
                     }
                     CombatField.Add(card);
                     card.UseSpecialAction(ActionType.Play);
@@ -263,7 +240,7 @@ namespace MTG_ConsoleEngine
             //Console.ResetColor();
             return true;
         }
-        public void DisplayPlayerField() => TableHelpers.DisplayFieldTable(_gameEngine, color, CombatField, PlayerNumberID);
+        public override void DisplayPlayerField() => TableHelpers.DisplayFieldTable(_gameEngine, color, CombatField, PlayerNumberID);
         public Dictionary<int,(bool result,List<CardBase> landsToTap)> Get_and_DisplayPlayerHand()
         {
             Dictionary<string,int> currentMana = SumAvailableManaFromManaField();
@@ -276,26 +253,6 @@ namespace MTG_ConsoleEngine
             Hand.ForEach(card => validpickwithcostcast.Add(key:Hand.IndexOf(card), value:card.CheckAvailability()));
             return validpickwithcostcast;
         }
-        public Dictionary<string, int> SumAvailableManaFromManaField()
-        {
-            Dictionary<string, int> SumManaOwnedAndAvailable = new();
-            //sumowanie dostepnej many
-            foreach (Land manaCard in ManaField.Where(c => c is Land && c.isTapped == false))
-            {
-                foreach (var mana in manaCard.manaValue)
-                {
-                    if (SumManaOwnedAndAvailable.ContainsKey(mana.Key))
-                    {
-                        SumManaOwnedAndAvailable[mana.Key] += mana.Value;
-                    }
-                    else
-                    {
-                        SumManaOwnedAndAvailable.Add(mana.Key, mana.Value);
-                    }
-                }
-            }
-
-            return SumManaOwnedAndAvailable;
-        }
+        
     }
 }

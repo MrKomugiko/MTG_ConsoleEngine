@@ -2,7 +2,7 @@ namespace MTG_ConsoleEngine.Card_Category
 {      
     public class Land : CardBase
     {
-        public override bool isTapped { 
+        public override bool IsTapped { 
             get => _isTapped; 
             set {
                 _isTapped = value;
@@ -60,7 +60,7 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override string GetCardString() 
         {
-            return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ {"".PadLeft(13)}";
+            return $"{this.GetType().Name,12} ║ {base.GetCardString()} ║ {"",13}";
         }
         public override (bool result, List<CardBase> landsToTap) CheckAvailability()
         {

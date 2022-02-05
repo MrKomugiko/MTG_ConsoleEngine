@@ -6,16 +6,16 @@ namespace MTG_ConsoleEngine
     {
         public int ID;
 
-        public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new List<(ActionType, string, Action)>();
+        public List<(ActionType trigger, string description, Action action)> CardSpecialActions = new();
 
         public readonly string Identificator; // 128_M21
         public readonly string Name; // Walking Corpse
         public readonly string Description;
         public readonly string CardType; // Creature
         public Dictionary<string,int> ManaCost = new();
-        public Player Owner {get;set;}
-        public abstract bool isTapped { get; set; }
-        public bool isAbleToPlay => CheckAvailability().result;
+        public PlayerBase Owner {get;set;}
+        public abstract bool IsTapped { get; set; }
+        public bool IsAbleToPlay => CheckAvailability().result;
 
         public string ManaCostString = "free";
 
@@ -42,7 +42,7 @@ namespace MTG_ConsoleEngine
         public abstract void AddSpecialAction(string _specialActionInfo);
         public virtual string GetCardString()
         {
-            return $"{Name.PadLeft(21)} ║ {ManaCostString.Trim().PadLeft(10)}";
+            return $"{Name,21} ║ {ManaCostString.Trim(),10}";
         }
         public object Clone()
         {
@@ -53,26 +53,26 @@ namespace MTG_ConsoleEngine
         public virtual (bool result, List<CardBase> landsToTap) CheckAvailability()
         {
             Dictionary<string, int> SumManaOwnedAndAvailable = Owner.SumAvailableManaFromManaField();
-            Dictionary<string, int> creatureManaCostCopy = new Dictionary<string, int>();
-            List<CardBase> landCardsToTap = new List<CardBase>();
+            Dictionary<string, int> creatureManaCostCopy = new();
+            List<CardBase> landCardsToTap = new();
             var sumTotal = SumManaOwnedAndAvailable.Sum(x => x.Value);
-            var currentLandsCardsCopy = Owner.ManaField.Where(c => c is Land && c.isTapped == false).ToList();
+            var currentLandsCardsCopy = Owner.ManaField.Where(c => c is Land && c.IsTapped == false).ToList();
 
             foreach (var orginalCost in ManaCost)
             {
                 creatureManaCostCopy.Add(key: orginalCost.Key, value: orginalCost.Value);
             }
 
-            foreach (var cost in ManaCost.Where(x=>x.Key != ""))
+            foreach (var cost in ManaCost.Where(x => x.Key != ""))
             {
                 if (SumManaOwnedAndAvailable.ContainsKey(cost.Key))
                 {
-                    if(SumManaOwnedAndAvailable[cost.Key] >= cost.Value)
+                    if (SumManaOwnedAndAvailable[cost.Key] >= cost.Value)
                     {
-                        foreach(Land coreLand in currentLandsCardsCopy.Where(x=>((Land)x).manaValue.ContainsKey(cost.Key)))
+                        foreach (Land coreLand in currentLandsCardsCopy.Where(x => ((Land)x).manaValue.ContainsKey(cost.Key)))
                         {
                             if (creatureManaCostCopy[cost.Key] == 0) break;
-                            if(creatureManaCostCopy[cost.Key] > 0)
+                            if (creatureManaCostCopy[cost.Key] > 0)
                             {
                                 SumManaOwnedAndAvailable[cost.Key] -= coreLand.manaValue[cost.Key];
                                 creatureManaCostCopy[cost.Key] -= coreLand.manaValue[cost.Key];
@@ -86,20 +86,19 @@ namespace MTG_ConsoleEngine
                 }
             }
 
-            int clearColorValue;
-            creatureManaCostCopy.TryGetValue("", out clearColorValue);
+            creatureManaCostCopy.TryGetValue("", out int clearColorValue);
 
-            if(creatureManaCostCopy.ContainsKey(""))
+            if (creatureManaCostCopy.ContainsKey(""))
             {
-                if(clearColorValue > 0)
+                if (clearColorValue > 0)
                 {
-                    if(SumManaOwnedAndAvailable.Sum(x=>x.Value) >= clearColorValue)
+                    if (SumManaOwnedAndAvailable.Sum(x => x.Value) >= clearColorValue)
                     {
                         Dictionary<string, int> creatureCoreMana = creatureManaCostCopy
                             .Where(x => x.Key != "")
                             .ToDictionary(x => x.Key, x => x.Value);
-                    
-                        var listaNoCoreLandow = currentLandsCardsCopy.Where(x=> ((Land)x).manaValue.Any(x=>creatureCoreMana.ContainsKey(x.Key) == false));
+
+                        var listaNoCoreLandow = currentLandsCardsCopy.Where(x => ((Land)x).manaValue.Any(x => creatureCoreMana.ContainsKey(x.Key) == false));
                         if (listaNoCoreLandow.Sum(x => ((Land)x).manaValue.First().Value) >= clearColorValue)
                         {
                             foreach (Land noCoreLand in listaNoCoreLandow)

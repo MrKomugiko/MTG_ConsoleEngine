@@ -6,7 +6,7 @@ namespace MTG_ConsoleEngine.Card_Category
             : base(_manaCost, _identificator, _name, _description, "Instant")
         {
         }
-        public override bool isTapped { get; set; }
+        public override bool IsTapped { get; set; }
         public object SpellSelectedTarget { get; set; } = new();
         public override void AddSpecialAction(string _specialActionInfo)
         {
@@ -61,7 +61,7 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override string GetCardString()
         {
-            return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ {"".PadLeft(13)}";
+            return $"{this.GetType().Name,12} ║ {base.GetCardString()} ║ {"",13}";
         }
     }
 }

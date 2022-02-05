@@ -52,7 +52,7 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public readonly string Category;
         public int CurrentAttack;
-        public override bool isTapped
+        public override bool IsTapped
         {
             get => _isTapped;
             set
@@ -134,19 +134,19 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override void UseSpecialAction(ActionType actionType)
         {
-            if (CardSpecialActions.Count > 0)
+            if (CardSpecialActions.Any())
             {
                 //Console.WriteLine("Action/s Triggered!");
-                foreach (var actions in CardSpecialActions.Where(x => x.trigger == actionType))
+                foreach (var (trigger, description, action) in CardSpecialActions.Where(x => x.trigger == actionType))
                 {
-                    actions.action();
+                    action();
                 }
             }
         }
         public override string GetCardString()
         {
             {
-                return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ atk:{CurrentAttack.ToString().PadLeft(2)}, hp:{CurrentHealth.ToString().PadLeft(2)}";
+                return $"{this.GetType().Name,12} ║ {base.GetCardString()} ║ atk:{CurrentAttack,2}, hp:{CurrentHealth,2}";
             }
         }
         public void Attack(Creature? _defender)
@@ -164,7 +164,7 @@ namespace MTG_ConsoleEngine.Card_Category
             {
                 if (_defender.CurrentHealth <= 0) 
                 {
-                    //Console.WriteLine($"Przeciwnik {(_defender.Name)} już nie żyje, atak nie obrona nie zostałą przeprowadzona przez nią.");
+                   // Console.WriteLine($"Przeciwnik {(_defender.Name)} już nie żyje, atak nie obrona nie zostałą przeprowadzona przez nią.");
                     return; 
                 }
                 this.CurrentHealth -= _defender.CurrentAttack;
@@ -179,7 +179,7 @@ namespace MTG_ConsoleEngine.Card_Category
             }
 
             UseSpecialAction(ActionType.Attack);
-            isTapped = true;
+            IsTapped = true;
         }
 
         public void ResetStatsAfterFight()

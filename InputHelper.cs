@@ -4,7 +4,7 @@ namespace MTG_ConsoleEngine
 {
     public static class InputHelper
     {
-        public static Dictionary<Creature, Creature> Input_DefendersDeclaration(Engine _gameEngine, List<Creature> _Attackers , List<Creature> _legalDeffenders, int _playerIndex)
+        public static Dictionary<Creature, Creature> Input_DefendersDeclaration(EngineBase _gameEngine, List<Creature> _Attackers , List<Creature> _legalDeffenders, int _playerIndex)
         {
             Console.WriteLine("[ Example input: 0-0, 0-1, 1-2 ]\n[ deffender - attacker, ...-...]");   
             Dictionary<Creature, Creature> _deffendersToDeclare = new();
@@ -43,7 +43,7 @@ namespace MTG_ConsoleEngine
                                 var attacker = _Attackers[attackerID];
                                 
                                 // sprawdzenie czy stworek ktorym chcemy sie broni nie jest juz tapnięty
-                                if(deffender.isTapped) {
+                                if(deffender.IsTapped) {
                                     Console.WriteLine("blocker pominięty, jest juz tapnięty");
                                     continue;
                                 }
@@ -61,7 +61,7 @@ namespace MTG_ConsoleEngine
                                 }
                             }
 
-                            if(_deffendersToDeclare.Count == _legalDeffenders.Where(x=>((Creature)x).isTapped == false).Count())
+                            if(_deffendersToDeclare.Count == _legalDeffenders.Where(x=>((Creature)x).IsTapped == false).Count())
                             {
                                 Console.WriteLine("Brak więcej stworkow do rozdysponowania, next turn");
                                 break;
@@ -126,7 +126,7 @@ namespace MTG_ConsoleEngine
                 return _deffendersToDeclare;
             }
         }
-        public static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster(Engine _gameEngine)
+        public static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster(EngineBase _gameEngine)
         {
             Console.WriteLine("[ Example input: 0-0 ] [ TargetPlayer - TargetCreature ]");
             int choosenIndexField, choosenIndexCreature;

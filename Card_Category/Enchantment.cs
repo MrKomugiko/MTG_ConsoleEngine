@@ -2,7 +2,7 @@ namespace MTG_ConsoleEngine.Card_Category
 {
     public class Enchantment : CardBase
     {
-        public override bool isTapped { get; set; }
+        public override bool IsTapped { get; set; }
         public string Category { get; }
         public string UseOn { get; private set;} = "";
         public CardBase? AssignedToCard = null;
@@ -74,7 +74,7 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public override string GetCardString()
         {
-            return $"{this.GetType().Name.PadLeft(12)} ║ {base.GetCardString()} ║ {"".PadLeft(13)}";
+            return $"{GetType().Name,12} ║ {base.GetCardString()} ║ {"",13}";
         }
     }
 }

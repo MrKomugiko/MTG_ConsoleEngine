@@ -4,7 +4,7 @@ namespace MTG_ConsoleEngine
 {
     public static class TableHelpers
     {
-        internal static void DisplayFieldTable(Engine _gameEngine, ConsoleColor _color, List<CardBase> _combatField, int _playerNumberID )
+        internal static void DisplayFieldTable(EngineBase _gameEngine, ConsoleColor _color, List<CardBase> _combatField, int _playerNumberID )
         {
             Console.ForegroundColor = _color;
 
@@ -180,7 +180,7 @@ namespace MTG_ConsoleEngine
             void rowWithID(Creature creature)
             {
                 int currentIndex = _combatField.IndexOf(creature);
-                string tappedValue = creature.isTapped ? "Tapped" : " Ready";
+                string tappedValue = creature.IsTapped ? "Tapped" : " Ready";
                 string statsValue = $"atk:{creature.CurrentAttack.ToString().PadLeft(2)}, hp:{creature.CurrentHealth.ToString().PadLeft(2)}";
                 Console.Write($"║  ");
                 Console.ForegroundColor = ConsoleColor.White;
@@ -249,7 +249,7 @@ namespace MTG_ConsoleEngine
                     Console.Write("");
 
                 Console.ForegroundColor = _color; 
-                Console.Write($"║ {_hand[index].isAbleToPlay.ToString().PadLeft(5)} ║ ");
+                Console.Write($"║ {_hand[index].IsAbleToPlay.ToString().PadLeft(5)} ║ ");
                 Console.ForegroundColor = ConsoleColor.White; 
                 Console.Write($"{index.ToString().PadLeft(2)}");
                 Console.ForegroundColor = _color; 
@@ -264,40 +264,39 @@ namespace MTG_ConsoleEngine
         }
         internal static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster(Engine _gameEngine)
         {
-            int choosenIndexField, choosenIndexCreature;
-            while(true)
+            while (true)
             {
-                var input = Console.ReadLine()??"";
+                var input = Console.ReadLine() ?? "";
                 var inputarr = input.Split("-");
-                if(String.IsNullOrEmpty(input)) 
+                if (String.IsNullOrEmpty(input))
                 {
                     Console.WriteLine("cancel operation of assignation enchantment card");
-                        return (false, -1, -1);
+                    return (false, -1, -1);
                 }
-                if(inputarr.Length<2) 
+                if (inputarr.Length < 2)
                 {
                     Console.WriteLine("niepoprawny/nie pełny format : <side combat land number> - <index of monster from this area> ex. 1-0");
                     continue;
                 }
-                if(Int32.TryParse(inputarr[0], out choosenIndexField) == false) 
+                if (Int32.TryParse(inputarr[0], out int choosenIndexField) == false)
                 {
                     Console.WriteLine("wprowadz poprawny numer strony 0 lub 1, sprobuj ponownie");
                     continue;
                 }
-                if(choosenIndexField > 1  || choosenIndexField < 0) 
+                if (choosenIndexField > 1 || choosenIndexField < 0)
                 {
                     Console.WriteLine("niepoprawny numer strony, wprowadz 0 dla swojej czesci lub 1 dla przeciwnika, spróbuj ponownie");
-                    continue;   
+                    continue;
                 }
-                if(Int32.TryParse(inputarr[1], out choosenIndexCreature) == false) 
+                if (Int32.TryParse(inputarr[1], out int choosenIndexCreature) == false)
                 {
                     Console.WriteLine("niepoprawny index karty z pola, sprobuj ponownie");
                     continue;
                 }
-                if(choosenIndexCreature > 0 && choosenIndexCreature >= _gameEngine.Players[choosenIndexField].CombatField.Count) 
+                if (choosenIndexCreature > 0 && choosenIndexCreature >= _gameEngine.Players[choosenIndexField].CombatField.Count)
                 {
-                    Console.WriteLine($"niepoprawny numer karty potworka, podaj wartosc od 0 do {_gameEngine.Players[choosenIndexField].CombatField.Count-1}, spróbuj ponownie");
-                    continue;   
+                    Console.WriteLine($"niepoprawny numer karty potworka, podaj wartosc od 0 do {_gameEngine.Players[choosenIndexField].CombatField.Count - 1}, spróbuj ponownie");
+                    continue;
                 }
 
                 return (true, choosenIndexField, choosenIndexCreature);
