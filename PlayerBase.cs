@@ -75,35 +75,145 @@ namespace MTG_ConsoleEngine
                 return _attackersToDeclare.ToArray();
             }
         }
+
+        protected Dictionary<int, int> _currentTotalManaStatus = new Dictionary<int, int>()
+                {
+                    {0,0 },
+                    {1,0 },
+                    {2,0 },
+                    {3,0 },
+                    {4,0 },
+                    {5,0 }
+                };
+
+        public Dictionary<int, int> CurrentTotalManaStatus { get => _currentTotalManaStatus; }
+        public Dictionary<int, int> manadiff { get; set; } = new Dictionary<int, int>()
+            {
+                { 0, 0},
+                { 1, 0},
+                { 2, 0},
+                { 3, 0},
+                { 4, 0},
+                { 5, 0}
+            };
+        public void RefreshManaStatus()
+        {
+          SumAvailableManaFromManaField();
+        } 
+
         public abstract Creature[] Get_AvailableAttackers();
         public abstract List<Creature> Get_AvailableDeffenders();
         public abstract void Heal(int value);
         public abstract bool PlayCardFromHand(CardBase card, List<CardBase> landsToPay = null);
-        public Dictionary<string, int> SumAvailableManaFromManaField()
+        public void SumAvailableManaFromManaField()
         {
-            Dictionary<string, int> SumManaOwnedAndAvailable = new();
-            //sumowanie dostepnej many
-            foreach (Land manaCard in ManaField.Where(c => c is Land && c.IsTapped == false))
-            {
-                foreach (var mana in manaCard.manaValue)
-                {
-                    if (SumManaOwnedAndAvailable.ContainsKey(mana.Key))
-                    {
-                        SumManaOwnedAndAvailable[mana.Key] += mana.Value;
-                    }
-                    else
-                    {
-                        SumManaOwnedAndAvailable.Add(mana.Key, mana.Value);
-                    }
-                }
-            }
+            _currentTotalManaStatus[0] = 0;
+            _currentTotalManaStatus[1] = 0;
+            _currentTotalManaStatus[2] = 0;
+            _currentTotalManaStatus[3] = 0;
+            _currentTotalManaStatus[4] = 0;
+            _currentTotalManaStatus[5] = 0;
 
-            return SumManaOwnedAndAvailable;
+            //sumowanie dostepnej many
+            foreach (Land manaCard in ManaField.Where(c=> c.IsTapped == false))
+            {
+                _currentTotalManaStatus[0] += manaCard.manaValue[0];
+                _currentTotalManaStatus[1] += manaCard.manaValue[1];
+                _currentTotalManaStatus[2] += manaCard.manaValue[2];
+                _currentTotalManaStatus[3] += manaCard.manaValue[3];
+                _currentTotalManaStatus[4] += manaCard.manaValue[4];
+                _currentTotalManaStatus[5] += manaCard.manaValue[5];
+            }
         }    
         public void AddToDeck(CardBase _card)
         {
             _card.Owner = this;
             Deck.Add(_card);
+        }
+        protected int RecurCounter = 0;
+        protected void RecurPowerSet(ref List<int[]> _OUTPUT, int[] _parentState, int[] leftToCheck, List<CardBase> _playableCardsFromHand)
+        {
+            
+           // Console.WriteLine("VALID COMBINATION :" + String.Join(",", _parentState));
+            _OUTPUT.Add(_parentState);
+            // if (RecurCounter > 25) return;
+
+            int[] newParentState = new int[_parentState.Length+1];
+            _parentState.CopyTo(newParentState,0);
+
+            if (leftToCheck.Length == 0) return;
+
+            int[] temp = leftToCheck;
+
+            int index = 0;
+            for (int j= 0; j< temp.Length; j++)
+            {
+                newParentState[newParentState.Length-1] = temp[j];
+
+                int[] itemsLeft = new int[temp.Length - 1];
+                index = 0;
+                for (int i = 0; i < temp.Length; i++)
+                {
+                    if (temp[i] == newParentState[newParentState.Length - 1]) continue;
+                    itemsLeft[index++] = temp[i];
+                }
+
+                var skillsToSum = new List<Dictionary<int, int>>();
+                for (int i = 0; i < newParentState.Length; i++)
+                {
+                    skillsToSum.Add(_playableCardsFromHand.First(x => x.ID == newParentState[i]).ManaCost);
+                };
+
+                int[] summed = SimpleSumMana(skillsToSum);
+
+                var costcheck = SimpleManaCheck(summed);
+                if (costcheck ==false) continue;
+                //if (newParentState.Length > 2) continue; // <------ restriction to only max 2 cards pairs
+
+                RecurPowerSet(ref _OUTPUT, newParentState, itemsLeft, _playableCardsFromHand);
+            }
+        }
+        protected int[] SimpleSumMana(List<Dictionary<int, int>> cardsToSum)
+        {
+            int[] sumData = new int[6];
+            for (int i = 0; i < cardsToSum.Count; i++)
+            {
+                foreach (var m in cardsToSum[i])
+                {
+                    sumData[m.Key] += m.Value;
+                }
+            }
+            return sumData;
+        }
+
+        protected bool SimpleManaCheck(int[] totalCost)
+        {
+            // sprawdzenie różnic pomiędzy "core colorami
+
+            manadiff[0] = CurrentTotalManaStatus[0] - totalCost[0];
+            manadiff[1] = CurrentTotalManaStatus[1] - totalCost[1];
+            manadiff[2] = CurrentTotalManaStatus[2] - totalCost[2];
+            manadiff[3] = CurrentTotalManaStatus[3] - totalCost[3];
+            manadiff[4] = CurrentTotalManaStatus[4] - totalCost[4];
+            manadiff[5] = CurrentTotalManaStatus[5] - totalCost[5];
+
+            if (manadiff[1] < 0 || manadiff[2] < 0 || manadiff[3] < 0 || manadiff[4] < 0 || manadiff[5] < 0)
+            {
+               // Console.WriteLine("brak podstawowej ilosci core landow");
+                return false;
+            }
+
+            // sprawdzenie czy suma reszty jest w stanie pokryc koszta no-color
+            int sum = manadiff[1] + manadiff[2] + manadiff[3] + manadiff[4] + manadiff[5];
+            if (-manadiff[0] > sum)
+            {
+              //  Console.WriteLine("nie starczy core many na pokrycie many no-color");
+                return false;
+            }
+           // Console.WriteLine("starczy many mana difference: " + String.Join(" | ", manadiff.Select(kvp => kvp.Value)));
+           // Console.WriteLine("reszta: " + (manadiff[0] + sum));
+
+            return true;
         }
     }
 }

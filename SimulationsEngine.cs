@@ -53,10 +53,6 @@ namespace MTG_ConsoleEngine
                 {
                     if (Players[CurrentPlayerIndex].Health <= 0)
                     {
-                        //Console.WriteLine("Turns played: " + TurnCounter);
-                        //Console.WriteLine("end of game:");
-                        //Console.WriteLine("player 1 hp:" + Players[0].Health);
-                        //Console.WriteLine("player 2 hp:" + Players[1].Health);
                         gameEnded = true;
                         return;
 
@@ -76,6 +72,7 @@ namespace MTG_ConsoleEngine
             _player.CombatField.ForEach(card => card.IsTapped = false);
             _player.ManaField.ForEach(card => card.IsTapped = false);
 
+            _player.SumAvailableManaFromManaField(); // reset cached at start new turn
             if (TurnCounter >= 2)
             {
                 _player.DrawCard();
@@ -171,44 +168,70 @@ namespace MTG_ConsoleEngine
     }
 
 
-    public override List<object> GetValidTargetsForCardType(CardBase card)
+    public override List<CardBase> GetValidTargetsForCardType(CardBase card, int playerID = 0)
     {
         if (card is Instant instant)
         {
-            // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
-            Console.WriteLine("Get valid targets for Instant: " + instant.Name);
-            List<object> targets = new();
+            List<CardBase> targets = new();
+            List<CardBase> playerA = new();
+            List<CardBase> playerB = new();
 
-            var player1Creatures = Players[0].CombatField.Where(x => x is Creature).ToList();
-            var player2Creatures = Players[1].CombatField.Where(x => x is Creature).ToList();
+            if (playerID == 0)
+            {
+                playerA = Players[0].CombatField.Where(x => x is Creature).ToList();
+                playerB = Players[1].CombatField.Where(x => x is Creature).ToList();
+            }
+            else
+            {
+                playerA = Players[1].CombatField.Where(x => x is Creature).ToList();
+                playerB = Players[0].CombatField.Where(x => x is Creature).ToList();
+            }
 
-          // player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-          // player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
-
-            targets.AddRange(player1Creatures);
-            targets.AddRange(player2Creatures);
+            if (card.TargetsType == TargetType.Ally)
+            {
+                targets.AddRange(playerA);
+            }else if(card.TargetsType == TargetType.Enemy)
+            {
+                targets.AddRange(playerB);
+            }else if (card.TargetsType == TargetType.Both)
+            {
+                targets.AddRange(playerA);
+                targets.AddRange(playerB);
+            }
 
             return targets;
         }
         if (card is Enchantment enchantment)
         {
-            // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
-            Console.WriteLine("Get valid targets for Enchantment: " + enchantment.Name);
-            List<object> targets = new();
+            List<CardBase> targets = new();
+            List<CardBase> playerA = new();
+            List<CardBase> playerB = new();
 
-            var player1Creatures = Players[0].CombatField.Where(x => x is Creature).ToList();
-            var player2Creatures = Players[1].CombatField.Where(x => x is Creature).ToList();
-
-            //player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-           // player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
-
-            targets.AddRange(player1Creatures);
-            targets.AddRange(player2Creatures);
-
-            if (targets.Count == 0)
+            if (playerID == 0)
             {
-              //  Console.WriteLine("Brak dostępnych celów użycia karty...");
+                playerA = Players[0].CombatField.Where(x => x is Creature).ToList();
+                playerB = Players[1].CombatField.Where(x => x is Creature).ToList();
             }
+            else
+            {
+                playerA = Players[1].CombatField.Where(x => x is Creature).ToList();
+                playerB = Players[0].CombatField.Where(x => x is Creature).ToList();
+            }
+
+            if (card.TargetsType == TargetType.Ally)
+            {
+                targets.AddRange(playerA);
+            }
+            else if (card.TargetsType == TargetType.Enemy)
+            {
+                targets.AddRange(playerB);
+            }
+            else if (card.TargetsType == TargetType.Both)
+            {
+                targets.AddRange(playerA);
+                targets.AddRange(playerB);
+            }
+
             return targets;
         }
 
@@ -253,8 +276,14 @@ namespace MTG_ConsoleEngine
             var corpse = DeadCreatures[i];
             _player.CombatField.Remove(corpse);
             //Console.WriteLine($"send {corpse.Name} to Graveyard...");
-            corpse.Owner.Graveyard.Add(corpse);
             corpse.Owner.CombatField.Remove(corpse);
+            
+            corpse.Owner.Graveyard.Add(corpse);
+            if (corpse is Creature c)
+            {
+                c.CurrentHealth = c.BaseHealth;
+                c.CurrentAttack = c.BaseAttack;
+            }
         }
     }
     protected override void ShuffleDeck(PlayerBase deckOwner)

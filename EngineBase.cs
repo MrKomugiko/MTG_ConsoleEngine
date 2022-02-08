@@ -12,7 +12,7 @@ namespace MTG_ConsoleEngine
         public int CurrentPlayerIndex = 0;
         public bool logs = true;
         protected List<Phase> GamePhases = new();
-        protected int TurnCounter = 0;
+        public int TurnCounter = 0;
         public PhaseType CurrentPhase { get; set; }
 
         public Creature[] GetAttackerDeclaration() => DeclaredAttackers;
@@ -26,7 +26,7 @@ namespace MTG_ConsoleEngine
         public abstract void Second_Main_Phase(PlayerBase _player);
         public abstract void End_Phase(PlayerBase _player);
        
-        public abstract List<object> GetValidTargetsForCardType(CardBase card);
+        public abstract List<CardBase> GetValidTargetsForCardType(CardBase card, int PlayerID = 0);
 
         protected abstract void ExecuteCombat();
         protected abstract void HandCardsCleanUpCountChecker(PlayerBase _player);
@@ -37,5 +37,13 @@ namespace MTG_ConsoleEngine
        // protected abstract void CastInstantIfCan(Player _player);
         protected abstract void MoveDeadCreaturesToGraveyard(PlayerBase _player);
         protected abstract void ShuffleDeck(PlayerBase deckOwner);
+ 
+        public enum TargetType
+        {
+            Ally,
+            Enemy,
+            Both,
+            None
+        }
     }
 }

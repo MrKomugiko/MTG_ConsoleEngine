@@ -15,11 +15,13 @@ namespace MTG_ConsoleEngine
         
             if(_number == 1) color = ConsoleColor.Blue;
             else color= ConsoleColor.Green;
+
+            SumAvailableManaFromManaField();
         }
         public override void DealDamage(int value)
         {
-            //  Console.BackgroundColor = ConsoleColor.DarkRed;
-            //   Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.DarkRed;
+            Console.ForegroundColor = ConsoleColor.White;
 
             if (value > 0)
             {
@@ -27,12 +29,12 @@ namespace MTG_ConsoleEngine
             }
             Health -= value;
             Console.WriteLine($"Aktualne HP: {Health}");
-          //  Console.ResetColor();
+            Console.ResetColor();
         }
         public override void Heal(int value)
         {
-            //   Console.BackgroundColor = ConsoleColor.DarkGreen;
-            //   Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.DarkGreen;
+            Console.ForegroundColor = ConsoleColor.White;
 
             if (value > 0)
             {
@@ -40,11 +42,11 @@ namespace MTG_ConsoleEngine
             }
             Health += value;
             Console.WriteLine($"Aktualne HP: {Health}");
-          //  Console.ResetColor();
+            Console.ResetColor();
         }
         public override void DrawCard()
         {
-            //   Console.ForegroundColor = color;
+            Console.ForegroundColor = color;
             if (Deck.Count > 0)
             {
                 var newCard = Deck.First();
@@ -57,7 +59,7 @@ namespace MTG_ConsoleEngine
                 Console.WriteLine("PRZEGRANA - BRAK KART!");
                 Health = -666;
             }
-            //  Console.ResetColor();
+            Console.ResetColor();
         }
         public override Creature[] Get_AvailableAttackers() {
 
@@ -87,7 +89,7 @@ namespace MTG_ConsoleEngine
         public Creature[] SelectAttackers_HumanInteraction()
         {
             TryAgain:
-          //  Console.ForegroundColor = color;
+            Console.ForegroundColor = color;
             DisplayPlayerField();
          //   Console.WriteLine("Wybierz atakujących z dostępnych kreatur na polu: [ indexy oddzielaj przecinkiem: 0,1,3... ]");
             // TODO: zrobic kopie tej metody dla automatycznej odpowiedzi ze strony AI
@@ -95,7 +97,7 @@ namespace MTG_ConsoleEngine
             if(availableTargets.Length == 0) return Array.Empty<Creature>();
 
             string input = Console.ReadLine()??"";
-            //Console.ResetColor();
+            
             if(String.IsNullOrEmpty(input)) return Array.Empty<Creature>();
 
             List<string> attackers = input.Trim().Split(",").ToList();
@@ -131,13 +133,14 @@ namespace MTG_ConsoleEngine
                     goto TryAgain;
                 }
             }
-        
+            Console.ResetColor();
             return GetCreaturesFromField(validIndexes.ToArray(),false);
         }
 
         public Dictionary<Creature,Creature> SelectDeffenders_HumanInteraction()
         {
           //  Console.WriteLine("Nadchodzący Atak:");
+            Console.ResetColor();
             var DeclaredAttackers = _gameEngine.GetAttackerDeclaration();
           //  foreach (Creature creature in DeclaredAttackers)
           //  {
@@ -161,7 +164,7 @@ namespace MTG_ConsoleEngine
         }
         public override bool PlayCardFromHand(CardBase card, List<CardBase> landsToPay = null)
         {
-            // Console.ForegroundColor = color;
+            Console.ForegroundColor = color;
            // Console.WriteLine($">>>>>>>>>>>>>>>>> Gracz {PlayerNumberID} zagrywa kartą {card.Name}");
             (bool status, int playerIndex, int creatureIndex) playerResponse = (false, -1, -1);
 
@@ -185,7 +188,7 @@ namespace MTG_ConsoleEngine
                 case Enchantment e:
                     if(e.UseOn == "Creature")   
                     {
-                        List<object> availableTargets2 = _gameEngine.GetValidTargetsForCardType(e);
+                        List<CardBase> availableTargets2 = _gameEngine.GetValidTargetsForCardType(e);
                         if(availableTargets2.Count == 0) return false;
 
                         Console.WriteLine($"[{(this.PlayerIndex)}] => Your Combat field Cards:");
@@ -237,22 +240,67 @@ namespace MTG_ConsoleEngine
             //Console.WriteLine("zapłąc za karte / usun ją z ręki");
             //card.CheckAvailability().landsToTap.ForEach(c => c.isTapped = true);
             Hand.Remove(card);
-            //Console.ResetColor();
+            RefreshManaStatus();
+            Console.ResetColor();
             return true;
         }
         public override void DisplayPlayerField() => TableHelpers.DisplayFieldTable(_gameEngine, color, CombatField, PlayerNumberID);
         public Dictionary<int,(bool result,List<CardBase> landsToTap)> Get_and_DisplayPlayerHand()
         {
-            Dictionary<string,int> currentMana = SumAvailableManaFromManaField();
+            SumAvailableManaFromManaField();
+            Dictionary<int, int> currentMana = _currentTotalManaStatus;
 
             TableHelpers.DisplayHandTable(color, currentMana, PlayerNumberID, Health, Hand);
-            
-            string myavailableMana = String.Join(",",currentMana.Select(x=>$"{x.Key} = {x.Value}")).ToString();
 
-            Dictionary<int,(bool result,List<CardBase> landsToTap)> validpickwithcostcast = new ();
-            Hand.ForEach(card => validpickwithcostcast.Add(key:Hand.IndexOf(card), value:card.CheckAvailability()));
+            Dictionary<int, (bool result, List<CardBase> landsToTap)> validpickwithcostcast = new();
+            Hand.ForEach(card => validpickwithcostcast.Add(key: Hand.IndexOf(card), value: card.CheckAvailability()));
             return validpickwithcostcast;
         }
+
+        //public void GetAllPossibleSpellCardsCombinations()
+        //{
+        //    // print available hand
+        //    Console.WriteLine("Print hand skills list");
+        //    Dictionary<CardBase, (bool result, List<CardBase> landsToPay)> CurrentHandDetailedData = new();
+        //    Hand.ForEach(x => CurrentHandDetailedData.Add(x, x.CheckAvailability()));
+        //    AvailableCardSpellInHand = CurrentHandDetailedData.Where(X => X.Value.result && X.Key is not Creature && X.Key is not Land).ToList();
+
+        //    Console.WriteLine(" ------------------------------------------------------------------------------- ");
+
+        //    Console.WriteLine("|  [ID]  |  [Can be used?]  |           [Name]           |     [Mana cost]      |");
+        //    Console.WriteLine("|--------|------------------|----------------------------|----------------------|");
+        //    foreach (var card in AvailableCardSpellInHand)
+        //    {
+        //        Console.WriteLine($"|    {card.Key.ID,2}  | {card.Value.result,16} | {card.Key.Name,26} | {card.Key.ManaCostString,20} |");
+        //    }
+        //    if (AvailableCardSpellInHand.Count == 0)
+        //    {
+        //        Console.WriteLine("         Brak kart skili któe mołbys użyć, lub nie stać cie na żadną");
+        //    }
+        //    Console.WriteLine(" ------------------------------------------------------------------------------- ");
+
+            
+        //    var availableCardsToCombine = AvailableCardSpellInHand.Select(x => x.Key.ID).ToList();
+
+        //    int[] arr = AvailableCardSpellInHand.Select(x => x.Key.ID).ToArray();
+        //    List<int[]> OUTPUT = new List<int[]>();
+        //    foreach (var item in arr)
+        //    {
+        //        int[] parentState = new int[1] { item };
+        //        int[] temp = arr;
+        //        int[] itemsLeft = new int[temp.Length - 1];
+
+        //        int index = 0;
+        //        foreach (int leftitem in temp)
+        //        {
+        //            if (leftitem == parentState[parentState.Length - 1]) continue;
+
+        //            itemsLeft[index++] = leftitem;
+        //        }
+
+        //        RecurPowerSet(ref OUTPUT, parentState, itemsLeft);
+        //    }
+        //}
         
     }
 }

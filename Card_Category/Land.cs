@@ -10,29 +10,48 @@ namespace MTG_ConsoleEngine.Card_Category
                  //   Console.WriteLine($"Land {this.Name} została tapnięta.");
             }
         }
+
         private bool _isTapped;
-        public Dictionary<string, int> manaValue = new();
-      
-        public Land(string _identificator, string _name, string _manaCode, int _value = 1) 
+        /*
+
+            0   ->   no color
+            1   ->   Black
+            2   ->   White
+            3   ->   Red
+            4   ->   Green
+            5   ->   Blue
+
+         */
+        public int manaCode = 0;
+        public Dictionary<int, int> manaValue = new(1)
+        {
+            {0, 0},
+            {1, 0},
+            {2, 0},
+            {3, 0},
+            {4, 0},
+            {5, 0}
+        };
+        public Land(string _identificator, string _name) 
             : base(new(), _identificator, _name,"", "Land")
         {
-            // TODO: zakłądajac ze land nie da nigdy 2 takich samych znakow many, inaczej trzeba je zsumowac
-            manaValue.Add(_manaCode,_value);
+            // create land card
+            base.TargetsType = EngineBase.TargetType.None;
         }
         public override void AddSpecialAction(string _specialActionInfo)
         {
-            // skill 1 
             if(_specialActionInfo.Contains("Add") && _specialActionInfo.Contains("mana"))
             {
+                // assign value to this land card
                 var value = _specialActionInfo.Replace("Add", "").Replace("mana", "").Trim().Split(" ");
-                string manaCode= "";
                 switch(value[1])
                 {
-                    case "Black":   manaCode = "B"; break;
-                    case "White":   manaCode = "W"; break;
-                    case "Green":   manaCode = "G"; break;
-                    case "Red":     manaCode = "R"; break;
-                    case "Blue":    manaCode = "U"; break;
+                    default:        manaValue[0] =  1;                                     manaCode = 0; break;
+                    case "Black":   manaValue[1] = Int32.Parse(value[0]);                  manaCode = 1; break;
+                    case "White":   manaValue[2] = Int32.Parse(value[0]);                  manaCode = 2; break;
+                    case "Red":     manaValue[3] = Int32.Parse(value[0]);                  manaCode = 3; break;
+                    case "Green":   manaValue[4] = Int32.Parse(value[0]);                  manaCode = 4; break;
+                    case "Blue":    manaValue[5] = Int32.Parse(value[0]);                  manaCode = 5; break;
                 };
 
                 CardSpecialActions.Add
@@ -40,7 +59,7 @@ namespace MTG_ConsoleEngine.Card_Category
                     (
                         trigger: ActionType.Play,
                         description: _specialActionInfo,
-                        action: () => Actions.PlayLandCard(Int32.Parse(value[0]), manaCode, this.Owner)
+                        action: () => Actions.PlayLandCard(this.Owner)
                     )
                 );
             }          

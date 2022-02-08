@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="PlayerAI.cs~RFd7c16ae.TMP" />
+  </ItemGroup>
+
 </Project>

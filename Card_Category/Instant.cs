@@ -2,9 +2,10 @@ namespace MTG_ConsoleEngine.Card_Category
 {
     public class Instant : CardBase
     {
-        public Instant(Dictionary<string, int> _manaCost, string _identificator, string _name, string _description) 
+        public Instant(Dictionary<int, int> _manaCost, string _identificator, string _name, string _description, EngineBase.TargetType _mainTarget) 
             : base(_manaCost, _identificator, _name, _description, "Instant")
         {
+            base.TargetsType = _mainTarget;
         }
         public override bool IsTapped { get; set; }
         public object SpellSelectedTarget { get; set; } = new();

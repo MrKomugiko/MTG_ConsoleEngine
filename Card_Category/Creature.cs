@@ -61,13 +61,14 @@ namespace MTG_ConsoleEngine.Card_Category
             }
         }
         public List<string> Perks { get; internal set; } = new List<string>();
+
         private int _currentHealth;
         public List<Enchantment> EnchantmentSlots = new();
         private bool _isTapped;
         private int _baseHealth;
         private int _baseAttack;
 
-        public Creature(Dictionary<string, int> _manaCost, string _identificator,string _name, string _category, string _description, int _health, int _attack)
+        public Creature(Dictionary<int, int> _manaCost, string _identificator,string _name, string _category, string _description, int _health, int _attack)
             : base(_manaCost, _identificator, _name, _description, "Creature")
         {
             this.BaseHealth = _health;
@@ -78,6 +79,7 @@ namespace MTG_ConsoleEngine.Card_Category
 
             this.CoreHealth = _health;
             this.CoreAttack = _attack;
+            base.TargetsType = EngineBase.TargetType.Enemy;
         }
         public override void AddSpecialAction(string _specialActionInfo)
         {

@@ -8,7 +8,7 @@ namespace MTG_ConsoleEngine
         {
             return new Creature
             (
-                _manaCost: new Dictionary<string, int>() { { "", 1 }, { "B", 1 } },
+                _manaCost: new Dictionary<int, int>() { { 0, 1 }, { 1, 1 } },
                 _identificator: "128_M21",
                 _name: "Walking Corpse",
                 _category: "Zombie",
@@ -21,7 +21,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<string, int>() { { "", 3 }, { "B", 1 } },
+                _manaCost: new Dictionary<int, int>() { { 0, 3 }, { 1, 1 } },
                 _identificator: "101_M19",
                 _name: "Infectious Horror",
                 _category: "Zombie",
@@ -36,7 +36,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<string, int>() { { "B", 1 } },
+                _manaCost: new Dictionary<int, int>() { { 1, 1 } },
                 _identificator: "077_WAR",
                 _name: "Banehound",
                 _category: "Nightmare Hound",
@@ -51,7 +51,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<string, int>() { { "",4 },{ "B", 1 } },
+                _manaCost: new Dictionary<int, int>() { { 0,4 },{ 1, 1 } },
                 _identificator: "095_M19",
                 _name: "Epicure of Blood",
                 _category: "Vampire",
@@ -67,7 +67,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<string, int>() { { "", 4 }, { "B", 1 } },
+                _manaCost: new Dictionary<int, int>() { { 0, 4 }, { 1, 1 } },
                 _identificator: "096_M19",
                 _name: "Fell Specter",
                 _category: "Specter",
@@ -94,8 +94,7 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "311_MID",
-                _name: "Swamp",
-                _manaCode: "B"
+                _name: "Swamp"
             );
             land.AddSpecialAction($"Add 1 Black mana");
             return land;
@@ -105,8 +104,7 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "275_MID",
-                _name: "Mountain",
-                _manaCode: "R"
+                _name: "Mountain"
             );
             land.AddSpecialAction($"Add 1 Red mana");
             return land;
@@ -116,8 +114,7 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "268_MID",
-                _name: "Plains",
-                _manaCode: "W"
+                _name: "Plains"
             );
             land.AddSpecialAction($"Add 1 White mana");
             return land;
@@ -127,8 +124,7 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "277_MID",
-                _name: "Forest",
-                _manaCode: "G"
+                _name: "Forest"
             );
             land.AddSpecialAction($"Add 1 Green mana");
             return land;
@@ -138,8 +134,7 @@ namespace MTG_ConsoleEngine
             var land = new Land
             (
                 _identificator: "265_M21",
-                _name: "Island",
-                _manaCode: "U"
+                _name: "Island"
             );
             land.AddSpecialAction($"Add 1 Blue mana");
             return land;
@@ -151,11 +146,12 @@ namespace MTG_ConsoleEngine
         {
             var enchantment = new Enchantment
             (
-                _manaCost: new Dictionary<string, int>() {{ "B", 1 } },
+                _manaCost: new Dictionary<int, int>() {{ 1, 1 } },
                 _identificator: "067_GRN",
                 _name: "Dead Weight",
                 _category: "Aura",
-                _description: "All things considered, his first day on patrol could have gone better"
+                _description: "All things considered, his first day on patrol could have gone better",
+                _mainTarget: EngineBase.TargetType.Enemy
             );
              enchantment.AddSpecialAction($"Enchant creature");
              enchantment.AddSpecialAction($"Enchanted creature gets -2/-2.");
@@ -165,11 +161,12 @@ namespace MTG_ConsoleEngine
         {
             var enchantment = new Enchantment
             (
-                _manaCost: new Dictionary<string, int>() { { "",1 },{ "B",1 } },
+                _manaCost: new Dictionary<int, int>() { { 0,1 },{ 1,1 } },
                 _identificator: "105_M21",
                 _name: "Infernal Scarring",
                 _category: "Aura",
-                _description: "One who is marked by demon in life is sure to be rembered as one in death."
+                _description: "One who is marked by demon in life is sure to be rembered as one in death.",
+                _mainTarget: EngineBase.TargetType.Ally
             );
             
              enchantment.AddSpecialAction($"Enchant creature");
@@ -184,10 +181,11 @@ namespace MTG_ConsoleEngine
         {
             var instant = new Instant
             (
-                _manaCost: new Dictionary<string, int>() {{ "B", 2 } },
+                _manaCost: new Dictionary<int, int>() {{ 1, 2 } },
                 _identificator: "104_WAR",
                 _name: "Sorin's Thirst",
-                _description: "''I see you're out of the wall.'' ~ Nahiri"
+                _description: "''I see you're out of the wall.'' ~ Nahiri",
+                _mainTarget: EngineBase.TargetType.Enemy
             );
              instant.AddSpecialAction($"{instant.Name} deals 2 damage to target creature and you gain 2 life.");
              return instant;

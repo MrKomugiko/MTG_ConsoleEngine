@@ -21,16 +21,18 @@ namespace MTG_ConsoleEngine
             }
 
             Console.WriteLine($"╠══════╦═══════════╦═══════════════════════╦═══════════════╦═════════════════════╣");
-            MainHeaders();   // ║ 'ID' ║ 'Status'  ║        'Name'         ║   'Stats'     ║      '.......'      ║
+            MainHeaders();   // ║ indx ║ 'Status'  ║        'Name'         ║   'Stats'     ║      '.......'      ║
             Console.WriteLine($"╠══════╬═══════════╬═══════════════════════╬═══════════════╬═════════════════════╣");
             string alertInfo = "";
-            foreach (Creature creature in _combatField.Where(c => (c is Creature)))
+            foreach (Creature creature in _combatField.Where(c => c is Creature))
             {
                 int currentIndex = _combatField.IndexOf(creature);
-                if(_gameEngine.GetAttackerDeclaration().Contains(creature) == true)
-                {
-                    alertInfo = " ATTACK INCOMMING! ";
-                }else if(_gameEngine.GetDeffendersDeclaration().ContainsKey(creature) == true)
+
+                    if(_gameEngine.GetAttackerDeclaration() != null && _gameEngine.GetAttackerDeclaration().Contains(creature) == true)
+                    {
+                        alertInfo = " ATTACK INCOMMING! ";
+                    }
+                else if(_gameEngine.GetDeffendersDeclaration() != null &&_gameEngine.GetDeffendersDeclaration().ContainsKey(creature) == true)
                 {
                     alertInfo = "   ON DEFFENDING.  ";
                 }
@@ -136,7 +138,7 @@ namespace MTG_ConsoleEngine
                 Console.ForegroundColor = _color;
                 Console.Write("║ ");
                 Console.ResetColor();
-                Console.Write("'ID'");
+                Console.Write("indx");
                 Console.ForegroundColor = _color;
                 Console.Write(" ║ ");
                 Console.ResetColor();
@@ -189,11 +191,18 @@ namespace MTG_ConsoleEngine
                 Console.Write($"  ║  {tappedValue.PadLeft(6)}   ║ {creature.Name.PadLeft(21)} ║ {statsValue} ║ {alertInfo.PadLeft(19)} ║\n");
             }
         }
-        internal static void DisplayHandTable(ConsoleColor _color, Dictionary<string,int> _currentManaDict, int _playerNumberID, int _playerHEalth, List<CardBase> _hand )
+        internal static void DisplayHandTable(ConsoleColor _color, Dictionary<int,int> _currentManaDict, int _playerNumberID, int _playerHEalth, List<CardBase> _hand )
         {
-            string myavailableMana = String.Join(",",_currentManaDict.Select(x=>$"{x.Key} = {x.Value}")).ToString();
-
             Console.ForegroundColor = _color;
+            string manaString = $"{(_currentManaDict[0] == 0 ? "" : $"[ ] {_currentManaDict[0]}, ")}";
+            manaString += $"{(_currentManaDict[1] == 0 ? "" : $"[B] {_currentManaDict[1]}, ")}";
+            manaString += $"{(_currentManaDict[2] == 0 ? "" : $"[W] {_currentManaDict[2]}, ")}";
+            manaString += $"{(_currentManaDict[3] == 0 ? "" : $"[R] {_currentManaDict[3]}, ")}";
+            manaString += $"{(_currentManaDict[4] == 0 ? "" : $"[G] {_currentManaDict[4]}, ")}";
+            manaString += $"{(_currentManaDict[5] == 0 ? "" : $"[U] {_currentManaDict[5]}")}";
+
+            string myavailableMana = manaString;
+       
             Console.WriteLine($"╔════════════════════════════════════════════════════════════════════════════════╗");
 
             Console.Write($"║                                ");
@@ -220,7 +229,7 @@ namespace MTG_ConsoleEngine
             Console.ForegroundColor = _color; 
             Console.Write(" ║");
             Console.ForegroundColor = ConsoleColor.White; 
-            Console.Write("'ID'");
+            Console.Write("indx");
             Console.ForegroundColor = _color; 
             Console.Write("║   ");
             Console.ForegroundColor = ConsoleColor.White; 
@@ -264,6 +273,7 @@ namespace MTG_ConsoleEngine
         }
         internal static (bool status, int playerIndex, int creatureIndex) Input_SinglePairPlayerMonster(Engine _gameEngine)
         {
+            Console.ResetColor();
             while (true)
             {
                 var input = Console.ReadLine() ?? "";
