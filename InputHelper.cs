@@ -6,6 +6,9 @@ namespace MTG_ConsoleEngine
     {
         public static Dictionary<Creature, Creature> Input_DefendersDeclaration(EngineBase _gameEngine, List<Creature> _Attackers , List<Creature> _legalDeffenders, int _playerIndex)
         {
+            var attackerCombatField = _gameEngine.Players[_playerIndex == 0 ? 1 : 0].CombatField;
+            var deffenderCombatField = _gameEngine.Players[_playerIndex == 0 ? 1 : 0].CombatField;
+
             Console.WriteLine("[ Example input: 0-0, 0-1, 1-2 ]\n[ deffender - attacker, ...-...]");   
             Dictionary<Creature, Creature> _deffendersToDeclare = new();
             while (true)
@@ -35,9 +38,9 @@ namespace MTG_ConsoleEngine
                     if(Int32.TryParse(input_splitted[1], out attackerID) && Int32.TryParse(input_splitted[0],out deffenderID))
                     {   
                         // sprawdzenie czy zakresy podanych ID nie wykraczaja poza dozwolone granice liczby mobkow
-                        if(attackerID<_Attackers.Count && deffenderID < _legalDeffenders.Count)
+                        if(attackerID<_Attackers.Count && deffenderID < deffenderCombatField.Count)
                         {
-                            if(_Attackers.Contains(_Attackers[attackerID]) && _gameEngine.Players[_playerIndex].CombatField.Contains(_legalDeffenders[deffenderID]))
+                            if(_Attackers.Contains(_Attackers[attackerID]) && deffenderCombatField.Contains(_legalDeffenders[deffenderID]))
                             {
                                 var deffender = (Creature)_legalDeffenders[deffenderID];
                                 var attacker = _Attackers[attackerID];

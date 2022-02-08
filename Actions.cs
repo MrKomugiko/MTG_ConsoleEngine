@@ -7,10 +7,10 @@ namespace MTG_ConsoleEngine
             cardOwner.Opponent.DealDamage(value);
             cardOwner.DealDamage(value);
         }
-        public static void PlayLandCard(int value, string colorCode, PlayerBase owner)
+        public static void PlayLandCard(PlayerBase owner)
         {
-            //Console.WriteLine("dodano karte many do puli ManaField`u");
-            
+            //Console.WriteLine("dodano karte many do puli ManaField`u w tej truze juz nie mozesz dodac kolejnej");
+           
             owner.IsLandPlayedThisTurn = true;
         }
         public static void Haste(Creature creatureCard)

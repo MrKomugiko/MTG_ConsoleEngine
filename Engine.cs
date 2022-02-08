@@ -47,6 +47,7 @@ namespace MTG_ConsoleEngine
             int gamephaselenght = GamePhases.Count;
             while (true)
             {
+                Console.ResetColor();
                 for (int i = 0; i < gamephaselenght; i++)
                 {
                     if (Players[CurrentPlayerIndex].Health <= 0)
@@ -74,6 +75,7 @@ namespace MTG_ConsoleEngine
         public override void Beginning_Phase(PlayerBase _player)
         {
             #region Begining_Phase
+            Console.ResetColor();
             CurrentPhase = PhaseType.Beginning_Phase;
             if (logs)
             {
@@ -84,6 +86,7 @@ namespace MTG_ConsoleEngine
                 Console.WriteLine(" - Untap Step [ DONE ]");
             }
 
+            _player.RefreshManaStatus(); // reset cached at start new turn
             _player.CombatField.ForEach(card => card.IsTapped = false);
             _player.ManaField.ForEach(card => card.IsTapped = false);
             if (logs)
@@ -102,6 +105,7 @@ namespace MTG_ConsoleEngine
         public override void First_Main_Phase(PlayerBase _player)
         {
             #region First_Main_Phase
+            Console.ResetColor();
             CurrentPhase = PhaseType.First_Main_Phase;
             if (logs)
             {
@@ -112,14 +116,16 @@ namespace MTG_ConsoleEngine
             if (_player.IsAI)
             {
                 ((PlayerAI)_player).AI_MakePlaysWithRandomCardFromHand();
+                ((PlayerAI)_player).DisplayPlayerField();
                 return;
             }
 
             while (true)
             {
+                ((Player)_player).SumAvailableManaFromManaField();
+
                 Dictionary<int, (bool result, List<CardBase> landsToTap)> handdata = new();
                 handdata = ((Player)_player).Get_and_DisplayPlayerHand();
-
                 var input = Console.ReadLine() ?? "";
                 if (String.IsNullOrEmpty(input)) break;
 
@@ -138,7 +144,6 @@ namespace MTG_ConsoleEngine
 
                 if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                 {
-                    Console.WriteLine("zapłąc za karte");
                     handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).IsTapped = true);
                 }
             }
@@ -147,6 +152,7 @@ namespace MTG_ConsoleEngine
         public override void Combat_Phase(PlayerBase _player)
         {
             #region Combat_Phase_Begining
+            Console.ResetColor();
             CurrentPhase = PhaseType.Combat_Phase_Begining;
             if (logs)
             {
@@ -187,7 +193,7 @@ namespace MTG_ConsoleEngine
                 }
 
             }
-            //Console.ResetColor();
+            Console.ResetColor();
             #endregion
 
             #region Combat_Phase_AttackerInstants
@@ -241,6 +247,7 @@ namespace MTG_ConsoleEngine
         public override void Second_Main_Phase(PlayerBase _player)
         {
             #region Second_Main_Phase
+            Console.ResetColor();
             CurrentPhase = PhaseType.Second_Main_Phase;
             if (logs)
             {
@@ -286,11 +293,12 @@ namespace MTG_ConsoleEngine
         public override void End_Phase(PlayerBase _player)
         {
             #region End_Phase
+            Console.ResetColor();
             CurrentPhase = PhaseType.End_Phase;
             if (logs)
             {
                 Console.WriteLine("╔════════════════════════════════════════════════════════════════════════════════╗");
-                Console.WriteLine("║                               End Phase: Player 2                              ║");
+                Console.WriteLine($"║                               End Phase: Player {_player.PlayerNumberID}                              ║");
                 Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════════╝");
             }
             //Console.WriteLine("End_Phase: Player " + _player.ID);
@@ -313,22 +321,45 @@ namespace MTG_ConsoleEngine
         }
 
 
-        public override List<object> GetValidTargetsForCardType(CardBase card)
+        public override List<CardBase> GetValidTargetsForCardType(CardBase card, int PlayerID = 0)
         {
             if (card is Instant instant)
             {
                 // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
                 Console.WriteLine("Get valid targets for Enchantment: " + instant.Name);
-                List<object> targets = new();
+                List<CardBase> targets = new();
+                List<CardBase> playerA = new();
+                List<CardBase> playerB = new();
 
-                var player1Creatures = Players[0].CombatField.Where(x => x is Creature).ToList();
-                var player2Creatures = Players[1].CombatField.Where(x => x is Creature).ToList();
+                if (PlayerID == 0)
+                {
+                    playerA = Players[0].CombatField.Where(x => x is Creature).ToList();
+                    playerB = Players[1].CombatField.Where(x => x is Creature).ToList();
+                }
+                else
+                {
+                    playerA = Players[1].CombatField.Where(x => x is Creature).ToList();
+                    playerB = Players[0].CombatField.Where(x => x is Creature).ToList();
+                }
 
-                player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-                player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
+                if (card.TargetsType == TargetType.Ally)
+                {
+                    targets.AddRange(playerA);
+                }
+                else if (card.TargetsType == TargetType.Enemy)
+                {
+                    targets.AddRange(playerB);
+                }
+                else if (card.TargetsType == TargetType.Both)
+                {
+                    targets.AddRange(playerA);
+                    targets.AddRange(playerB);
+                }
+                playerA.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
+                playerB.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
 
-                targets.AddRange(player1Creatures);
-                targets.AddRange(player2Creatures);
+                targets.AddRange(playerA);
+                targets.AddRange(playerB);
 
                 return targets;
             }
@@ -336,21 +367,39 @@ namespace MTG_ConsoleEngine
             {
                 // TODO: sposob zeby nadpisywac zwracanie dostepnych celow
                 Console.WriteLine("Get valid targets for Enchantment: " + enchantment.Name);
-                List<object> targets = new();
+                List<CardBase> targets = new();
+                List<CardBase> playerA = new();
+                List<CardBase> playerB = new();
 
-                var player1Creatures = Players[0].CombatField.Where(x => x is Creature).ToList();
-                var player2Creatures = Players[1].CombatField.Where(x => x is Creature).ToList();
-
-                player1Creatures.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
-                player2Creatures.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
-
-                targets.AddRange(player1Creatures);
-                targets.AddRange(player2Creatures);
-
-                if (targets.Count == 0)
+                if (PlayerID == 0)
                 {
-                    Console.WriteLine("Brak dostępnych celów użycia karty...");
+                    playerA = Players[0].CombatField.Where(x => x is Creature).ToList();
+                    playerB = Players[1].CombatField.Where(x => x is Creature).ToList();
                 }
+                else
+                {
+                    playerA = Players[1].CombatField.Where(x => x is Creature).ToList();
+                    playerB = Players[0].CombatField.Where(x => x is Creature).ToList();
+                }
+
+                if (card.TargetsType == TargetType.Ally)
+                {
+                    targets.AddRange(playerA);
+                }
+                else if (card.TargetsType == TargetType.Enemy)
+                {
+                    targets.AddRange(playerB);
+                }
+                else if (card.TargetsType == TargetType.Both)
+                {
+                    targets.AddRange(playerA);
+                    targets.AddRange(playerB);
+                }
+                playerA.ForEach(target => Console.WriteLine($"[0-{Players[0].CombatField.IndexOf((CardBase)target)}] Player 1 : {((CardBase)target).Name}"));
+                playerB.ForEach(target => Console.WriteLine($"[1-{Players[1].CombatField.IndexOf((CardBase)target)}] Player 2 : {((CardBase)target).Name}"));
+
+                targets.AddRange(playerA);
+                targets.AddRange(playerB);
                 return targets;
             }
 
@@ -464,7 +513,6 @@ namespace MTG_ConsoleEngine
 
                     if (_player.PlayCardFromHand(_player.Hand[choosenIndex]))
                     {
-                        Console.WriteLine("zapłąc za karte");
                         handdata[choosenIndex].landsToTap.ForEach(land => ((Land)land).IsTapped = true);
                     }
                 }

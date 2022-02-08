@@ -1,7 +1,7 @@
 ﻿using MTG_ConsoleEngine;
 using System.Diagnostics;
 
-Console.WriteLine("MTG Game Engine");
+//Console.WriteLine("MTG Game Engine");
 
 //PlayerAI Player1 = new PlayerAI(1, 20);
 //Player Player2 = new Player(2, 20);
@@ -10,7 +10,6 @@ Console.WriteLine("MTG Game Engine");
 
 //Engine Game = new Engine(Player1, Player2);
 //Game.logs = true;
-
 //Enumerable.Range(0, 4).ToList().ForEach(x =>
 //{
 //    Player1.AddToDeck(Creature_Factory.Get_Banehound());
@@ -24,6 +23,8 @@ Console.WriteLine("MTG Game Engine");
 //{
 //    Player1.AddToDeck(Land_Factory.Get_Swamp());
 //});
+//int CardID = 0;
+//Player1.Deck.ForEach(x=>x.ID = CardID++);
 
 //Enumerable.Range(0, 4).ToList().ForEach(x =>
 //{
@@ -38,9 +39,17 @@ Console.WriteLine("MTG Game Engine");
 //{
 //    Player2.AddToDeck(Land_Factory.Get_Swamp());
 //});
+//CardID = 0;
+//Player2.Deck.ForEach(x => x.ID = CardID++);
 
 //Game.Start();
 //Console.ReadLine();
+
+
+
+
+//B: Run stuff you want timed
+
 
 List<CardBase> TEST_DECK = new();
 
@@ -70,10 +79,13 @@ Enumerable.Range(0, 14).ToList().ForEach(x => {
     TEST_DECK_2.Add(Land_Factory.Get_Swamp());
 });
 
+int CardID = 0;
+TEST_DECK_2.ForEach(x => x.ID = CardID++);
+CardID = 0;
+TEST_DECK.ForEach(x => x.ID = CardID++);
 
-//B: Run stuff you want timed
 
-for (int i = 0; i < 100_000; i++)
+for (int i = 0; i < 1_000; i++)
 {
     PlayerAI Player1 = new(1, 20);
     PlayerAI Player2 = new(2, 20);
@@ -88,10 +100,27 @@ for (int i = 0; i < 100_000; i++)
         Player2.AddToDeck(TEST_DECK_2[j]);
     }
 
-
     Game.Start();
+    //Console.WriteLine("end of game:");
+    //Console.WriteLine("Turns played: " + Game.TurnCounter);
+    //Console.WriteLine("player 1 hp:" + Game.Players[0].Health);
+    //Console.WriteLine("player 2 hp:" + Game.Players[1].Health);
+    //Console.WriteLine();
+    //Console.WriteLine("Player 1 Deck count:       " + Player1.Deck.Count);
+    //Console.WriteLine("         Hand count:       " + Player1.Hand.Count);
+    //Console.WriteLine("         LandArea count:   " + Player1.ManaField.Count);
+    //Console.WriteLine("         CombatZone count: " + Player1.CombatField.Count);
+    //Console.WriteLine("         Graveyard count:  " + Player1.Graveyard.Count);
+    //Console.WriteLine();
+    //Console.WriteLine("Player 2 Deck count:       " + Player2.Deck.Count);
+    //Console.WriteLine("         Hand count:       " + Player2.Hand.Count);
+    //Console.WriteLine("         LandArea count:   " + Player2.ManaField.Count);
+    //Console.WriteLine("         CombatZone count: " + Player2.CombatField.Count);
+    //Console.WriteLine("         Graveyard count:  " + Player2.Graveyard.Count);
+    //Console.WriteLine("------------------------------------------");
+    //Console.WriteLine();
 }
 
-Console.WriteLine("Stop");
+//Console.WriteLine("Stop");
 
 

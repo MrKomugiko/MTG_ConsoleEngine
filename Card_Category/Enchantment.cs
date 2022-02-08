@@ -6,10 +6,12 @@ namespace MTG_ConsoleEngine.Card_Category
         public string Category { get; }
         public string UseOn { get; private set;} = "";
         public CardBase? AssignedToCard = null;
-        public Enchantment(Dictionary<string, int> _manaCost, string _identificator, string _name, string _description, string _category) : 
+
+        public Enchantment(Dictionary<int, int> _manaCost, string _identificator, string _name, string _description, string _category, EngineBase.TargetType _mainTarget) : 
             base(_manaCost, _identificator, _name, _description, "Enchantment")
         {
-            Category = _category;
+            this.Category = _category;
+            base.TargetsType = _mainTarget;
         }
         public override void AddSpecialAction(string _specialActionInfo)
         {

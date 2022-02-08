@@ -19,6 +19,8 @@ namespace MTG_ConsoleEngine
 
             if (_number == 1) color = ConsoleColor.Blue;
             else color = ConsoleColor.Green;
+
+            SumAvailableManaFromManaField();
         }
         public override void DealDamage(int value)
         {
@@ -68,7 +70,7 @@ namespace MTG_ConsoleEngine
         {
 
             var possibleAttackers = CombatField.Where(x => x.IsTapped == false && x is Creature).Select(x => (Creature)x).ToArray();
-            if (possibleAttackers.Length == 0)
+            if (possibleAttackers.Any() == false)
             {
                 //// Console.Writeline("Brak posiadanych jednostek gotowych do ataku");
                 return Array.Empty<Creature>();
@@ -83,7 +85,7 @@ namespace MTG_ConsoleEngine
         public override List<Creature> Get_AvailableDeffenders()
         {
             var possibleDefenders = CombatField.Where(x => x.IsTapped == false && x is Creature).Select(x => (Creature)x).ToList();
-            if (possibleDefenders.Count == 0) return new();
+            if (possibleDefenders.Any() == false) return new();
 
             //  // Console.Writeline("Dostępne jednostki do obrony");
             //  possibleDefenders.ForEach(x => 
@@ -120,53 +122,20 @@ namespace MTG_ConsoleEngine
                     break;
 
                 case Enchantment e:
-                    List<object> availableTargets2 = _gameEngine.GetValidTargetsForCardType(e);
+                    List<CardBase> availableTargets2 = _gameEngine.GetValidTargetsForCardType(e, PlayerIndex);
                     if (availableTargets2.Count == 0) return false;
-
-                    // Console.Writeline($"[{(this.PlayerIndex)}] => Your Combat field Cards:");
-                    // this.DisplayPlayerField();
-                    // Console.Writeline($"[{(Opponent.PlayerIndex)}] => Enemies Combat field Cards:");
-                   // _gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();
-                   // playerResponse = InputHelper.Input_SinglePairPlayerMonster(_gameEngine);
-
-                    //if (playerResponse.status == true)
-                    //{
-                    //    e.AssingToCreature((Creature)(_gameEngine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));
-                    //}
-                    //else
-                    //{
-                    //    // Console.Writeline("anuluj, skip");
-                    //    return false;
-                    //}
 
                     break;
 
                 case Instant i:
-                    List<object> availableTargets = _gameEngine.GetValidTargetsForCardType(i);
-
+                    List<CardBase> availableTargets = _gameEngine.GetValidTargetsForCardType(i, PlayerIndex);
                     if (availableTargets.Count == 0) return false;
-
-                    //  // Console.Writeline($"[{this.PlayerIndex}] => Your Combat field Cards:");
-                    // this.DisplayPlayerField();
-                    //   // Console.Writeline($"[{(Opponent.PlayerIndex)}] => Enemies Combat field Cards:");
-                    //_gameEngine.Players[Opponent.PlayerIndex].DisplayPlayerField();
-                    //playerResponse = InputHelper.Input_SinglePairPlayerMonster(_gameEngine);
-
-                    //if (playerResponse.status == true)
-                    //{
-                    //    i.SpellSelectedTarget = ((Creature)(_gameEngine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));
-                    //    i.UseSpecialAction(ActionType.CastInstant);
-                    //}
-                    //else
-                    //{
-                    //    //          // Console.Writeline("anuluj, skip");
-                    //    return false;
-                    //}
 
                     break;
             }
             //// Console.Writeline("zapłąc za karte / usun ją z ręki");
             landsToPay.ForEach(c => c.IsTapped = true);
+            RefreshManaStatus();
             Hand.Remove(card);
 
             //Console.ResetColor();
@@ -198,8 +167,6 @@ namespace MTG_ConsoleEngine
             }
         }
 
-
-
         public void AI_RemoveOneCardFromHand()
         {
             /*_AI_*/ // remove one random card if total holding > 7
@@ -211,8 +178,8 @@ namespace MTG_ConsoleEngine
         }
         public Dictionary<Creature, Creature> AI_RandomDeffendersDeclaration()
         {
-            //// Console.Writeline(">>>>>> AI CANT CHOOSE DDEFENDERS ... YET! <<");
-
+            // SEMI RANDOM ! ~ GUIDED 
+            // TODO: 
             // AI gonna block ONLY WHEN monster can survive attack
             Creature[] validDeffenders = Get_AvailableDeffenders().ToArray();
             Creature[] attackers = _gameEngine.GetAttackerDeclaration();
@@ -225,20 +192,6 @@ namespace MTG_ConsoleEngine
             { selectedDeffOption = defenseoptions[1]; }
             else selectedDeffOption = defenseoptions[3];
 
-            //if (selectedDeffOption.Count > 0)
-            //{
-            //    foreach (var deffend in selectedDeffOption)
-            //    {
-            //        string your = $" [You] { deffend.Key.Name} ({ deffend.Key.CurrentAttack}/{ deffend.Key.CurrentHealth})".PadRight(35);
-            //        string enemy = $" ({ deffend.Value.CurrentAttack}/{ deffend.Value.CurrentHealth}) { deffend.Value.Name} [Enemy]".PadLeft(35);
-            //        // Console.Writeline($">> Obrona: {your} vs {enemy} ");
-            //    }
-            //}
-            //else
-            //{
-            //    // Console.Writeline(">> Obrona: Przyjęcie obrażeń na klate xD");
-
-            //}
             return selectedDeffOption;
         }
 
@@ -297,28 +250,13 @@ namespace MTG_ConsoleEngine
         public void AI_PlayRandomInstatFromHand()
         {
 
-            //if (this.Hand.Any(x => (x is Instant instant)))
-            //{
-            //    while (true)
-            //    {
-            //        List<Instant> availableInstants = this.Hand.Where(x => x is Instant && x.IsAbleToPlay)
-            //                .Select(x => (Instant)x).ToList();
-            //        //// Console.Writeline("lista mozliwych akcji");
-            //        //foreach (Instant card in availableInstants)
-            //        //{
-            //        //    // Console.Writeline($"Play: {card.Name} [{card.GetType().Name}]");
-            //        //}
+            if (this.Hand.Any(x => (x is Instant instant) || (x is Enchantment)))
+            {
+                // GetAllPossibleSpellCardsCombinations();  // <- too powerfull xD
+                //----------------------------------------------------------------------
+                GetPureRandomSkillsCombo(); // pure randomized fit in mana cost
 
-            //        if (availableInstants.Count() == 0) break;
-
-            //        //TODO: wybieranie skila jakos xd
-            //        // sprawdzanie czy jest jakis powod do uzywania instanta xd 
-            //        //  ewentualknie dodac narazie losowy, bedzie dzialac przy 1 intancie 
-            //        //  gorzej gdy bedziie kilka opcji ... hmm
-            //        // // Console.Writeline(">> AI CANT CHOOSE INSTANTS YET! <<");
-            //        break;
-            //    }
-            //}
+            }
 
         }
         public void AI_MakePlaysWithRandomCardFromHand()
@@ -328,12 +266,13 @@ namespace MTG_ConsoleEngine
             while (true)
             {
                 // get list available draws
+                RefreshManaStatus();
                 Dictionary<CardBase, (bool result, List<CardBase> landsToPay)> CurrentHandDetailedData = new();
                 Hand.ForEach(x => CurrentHandDetailedData.Add(x,x.CheckAvailability()));
 
                 var creaturesOnly = CurrentHandDetailedData.Where(X => X.Value.result == true && X.Key is Creature);
 
-                if (creaturesOnly.Count() == 0) break;
+                if (!creaturesOnly.Any()) break;
 
                 var randomCreatureFromHand = creaturesOnly.ElementAt(rand.Next(0, creaturesOnly.Count()));
 
@@ -453,5 +392,133 @@ namespace MTG_ConsoleEngine
 
             return possiblescenarios;
         }
+
+        public void GetAllPossibleSpellCardsCombinations()
+        {
+            List<KeyValuePair<CardBase, (bool result, List<CardBase> landsToPay)>> AvailableCardSpellInHand = new();
+            // print available hand
+            // Console.WriteLine("Print hand skills list");
+            Dictionary<CardBase, (bool result, List<CardBase> landsToPay)> CurrentHandDetailedData = new();
+            Hand.ForEach(x => CurrentHandDetailedData.Add(x, x.CheckAvailability()));
+            AvailableCardSpellInHand = CurrentHandDetailedData.Where(X => X.Value.result && X.Key is not Creature && X.Key is not Land).ToList();
+
+            Console.WriteLine(" ------------------------------------------------------------------------------- ");
+
+            Console.WriteLine("|  [ID]  |  [Can be used?]  |           [Name]           |     [Mana cost]      |");
+            Console.WriteLine("|--------|------------------|----------------------------|----------------------|");
+            foreach (var card in AvailableCardSpellInHand)
+            {
+                Console.WriteLine($"|    {card.Key.ID,2}  | {card.Value.result,16} | {card.Key.Name,26} | {card.Key.ManaCostString,20} |");
+            }
+            if (AvailableCardSpellInHand.Count == 0)
+            {
+                Console.WriteLine("        Brak kart skili które mołbys użyć, lub nie stać cie na żadną");
+            }
+            Console.WriteLine(" ------------------------------------------------------------------------------- ");
+
+            List<int[]> OUTPUT = new List<int[]>();
+            int[] arr = AvailableCardSpellInHand.Select(x => x.Key.ID).ToArray();
+            List<CardBase> playableSkillsFromHand = AvailableCardSpellInHand.Select(x => x.Key).ToList();
+            foreach (var item in arr)
+            {
+                int[] parentState = new int[1] { item };
+                int[] temp = arr;
+                int[] itemsLeft = new int[temp.Length - 1];
+
+                int index = 0;
+                foreach (int leftitem in temp)
+                {
+                    if (leftitem == parentState[parentState.Length - 1]) continue;
+
+                    itemsLeft[index++] = leftitem;
+                }
+
+                RecurPowerSet(ref OUTPUT, parentState, itemsLeft, playableSkillsFromHand);
+            }
+
+            Console.WriteLine(OUTPUT.Count);
+        }
+   
+
+        public List<(CardBase skillCard, CardBase target)> GetPureRandomSkillsCombo()
+        {
+            List<KeyValuePair<CardBase, (bool result, List<CardBase> landsToPay)>> AvailableCardSpellInHand = new();
+            // print available hand
+            // Console.WriteLine("Print hand skills list");
+            Dictionary<CardBase, (bool result, List<CardBase> landsToPay)> CurrentHandDetailedData = new();
+            Hand.ForEach(x => CurrentHandDetailedData.Add(x, x.CheckAvailability()));
+            AvailableCardSpellInHand = CurrentHandDetailedData.Where(X => X.Value.result && X.Key is not Creature && X.Key is not Land).ToList();
+
+            //////Console.WriteLine(" ------------------------------------------------------------------------------- ");
+
+            //////Console.WriteLine("|  [ID]  |  [Can be used?]  |           [Name]           |     [Mana cost]      |");
+            //////Console.WriteLine("|--------|------------------|----------------------------|----------------------|");
+            //////foreach (var card in AvailableCardSpellInHand)
+            //////{
+                //////Console.WriteLine($"|    {card.Key.ID,2}  | {card.Value.result,16} | {card.Key.Name,26} | {card.Key.ManaCostString,20} |");
+            //////}
+            //////if (AvailableCardSpellInHand.Count == 0)
+            //////{
+                //////Console.WriteLine("         Brak kart skili któe mołbys użyć, lub nie stać cie na żadną");
+            //////}
+            //////Console.WriteLine(" ------------------------------------------------------------------------------- ");
+
+            //List
+            List<Dictionary<int, int>> skillsToSum = new List<Dictionary<int, int>>();
+            List<CardBase> SkillsToPlay = new List<CardBase>();
+            int randomIndex = -1;
+            while (true)
+            {
+                randomIndex = rand.Next(-1, AvailableCardSpellInHand.Count);
+                if (randomIndex < 0)
+                {
+                  //  Console.WriteLine("koniec szukania, lub nie granie wcale");
+                    break;
+                }
+                CardBase _randomCard = AvailableCardSpellInHand.ElementAt(randomIndex).Key;
+
+                if (SkillsToPlay.Contains(_randomCard))
+                {
+                    continue; // nie ma powtarzania, nie da rady rzucic 2x TEJ samej karty
+                }
+
+                skillsToSum.Add(_randomCard.ManaCost);
+
+                // podsumowanie i sprawdzenie czy nas stać na ten zestaw
+                int[] summed = SimpleSumMana(skillsToSum);
+                var costcheck = SimpleManaCheck(summed);
+                if (costcheck == false)
+                {
+                   // Console.WriteLine("pałka się przegła, uzyjesz skili ktore wczesniej wylosowales");
+                    break;
+                }
+
+                //////Console.WriteLine("losowa kartaID:"+ _randomCard.ID);
+                SkillsToPlay.Add(_randomCard);
+            }
+
+            List<(CardBase skillCard, CardBase target)> randomizedOutput = new();
+            foreach(CardBase card in SkillsToPlay)
+            {
+                //////Console.WriteLine($"Karta skilla: {card.Name}, dostępne cele:");
+                List<CardBase> targets = _gameEngine.GetValidTargetsForCardType(card, PlayerIndex);
+                if (targets.Count == 0) continue;
+                //////foreach(var target in targets)
+                //////{
+                    //////Console.WriteLine($"\t - [ {card.TargetsType.ToString(),5} ] {target.Name,20}");
+                //////}
+
+                randomizedOutput.Add((card, targets.ElementAt(rand.Next(0, targets.Count))));
+            }
+
+            //////Console.WriteLine("\n FINALNIE CZAS NA ROZLOSOWANIE CELÓW, czyli to co tygryski lubią najbardziej xD\n");
+            
+            //////foreach(var pair in randomizedOutput)
+            //////{
+                //////Console.WriteLine($"Karta: {pair.skillCard.Name,20} => [cel: {pair.skillCard.TargetsType,5}] {pair.target.Name,-15}");
+            //////}
+            return randomizedOutput;
+        }
+
     }
 }
