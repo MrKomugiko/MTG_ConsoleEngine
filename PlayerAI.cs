@@ -254,7 +254,8 @@ namespace MTG_ConsoleEngine
             {
                 // GetAllPossibleSpellCardsCombinations();  // <- too powerfull xD
                 //----------------------------------------------------------------------
-                // GetRandomSpellsCombo(); // pure randomized fit in mana cost
+                GetPureRandomSkillsCombo(); // pure randomized fit in mana cost
+
             }
 
         }
@@ -448,19 +449,19 @@ namespace MTG_ConsoleEngine
             Hand.ForEach(x => CurrentHandDetailedData.Add(x, x.CheckAvailability()));
             AvailableCardSpellInHand = CurrentHandDetailedData.Where(X => X.Value.result && X.Key is not Creature && X.Key is not Land).ToList();
 
-            Console.WriteLine(" ------------------------------------------------------------------------------- ");
+            //////Console.WriteLine(" ------------------------------------------------------------------------------- ");
 
-            Console.WriteLine("|  [ID]  |  [Can be used?]  |           [Name]           |     [Mana cost]      |");
-            Console.WriteLine("|--------|------------------|----------------------------|----------------------|");
-            foreach (var card in AvailableCardSpellInHand)
-            {
-                Console.WriteLine($"|    {card.Key.ID,2}  | {card.Value.result,16} | {card.Key.Name,26} | {card.Key.ManaCostString,20} |");
-            }
-            if (AvailableCardSpellInHand.Count == 0)
-            {
-                Console.WriteLine("         Brak kart skili któe mołbys użyć, lub nie stać cie na żadną");
-            }
-            Console.WriteLine(" ------------------------------------------------------------------------------- ");
+            //////Console.WriteLine("|  [ID]  |  [Can be used?]  |           [Name]           |     [Mana cost]      |");
+            //////Console.WriteLine("|--------|------------------|----------------------------|----------------------|");
+            //////foreach (var card in AvailableCardSpellInHand)
+            //////{
+                //////Console.WriteLine($"|    {card.Key.ID,2}  | {card.Value.result,16} | {card.Key.Name,26} | {card.Key.ManaCostString,20} |");
+            //////}
+            //////if (AvailableCardSpellInHand.Count == 0)
+            //////{
+                //////Console.WriteLine("         Brak kart skili któe mołbys użyć, lub nie stać cie na żadną");
+            //////}
+            //////Console.WriteLine(" ------------------------------------------------------------------------------- ");
 
             //List
             List<Dictionary<int, int>> skillsToSum = new List<Dictionary<int, int>>();
@@ -492,29 +493,30 @@ namespace MTG_ConsoleEngine
                     break;
                 }
 
-                Console.WriteLine("losowa kartaID:"+ _randomCard.ID);
+                //////Console.WriteLine("losowa kartaID:"+ _randomCard.ID);
                 SkillsToPlay.Add(_randomCard);
             }
 
             List<(CardBase skillCard, CardBase target)> randomizedOutput = new();
             foreach(CardBase card in SkillsToPlay)
             {
-                Console.WriteLine($"Karta skilla: {card.Name}, dostępne cele:");
+                //////Console.WriteLine($"Karta skilla: {card.Name}, dostępne cele:");
                 List<CardBase> targets = _gameEngine.GetValidTargetsForCardType(card, PlayerIndex);
-                foreach(var target in targets)
-                {
-                    Console.WriteLine($"\t - [ {card.TargetsType.ToString(),5} ] {target.Name,20}");
-                }
+                if (targets.Count == 0) continue;
+                //////foreach(var target in targets)
+                //////{
+                    //////Console.WriteLine($"\t - [ {card.TargetsType.ToString(),5} ] {target.Name,20}");
+                //////}
 
                 randomizedOutput.Add((card, targets.ElementAt(rand.Next(0, targets.Count))));
             }
 
-            Console.WriteLine("\n FINALNIE CZAS NA ROZLOSOWANIE CELÓW, czyli to co tygryski lubią najbardziej xD\n");
+            //////Console.WriteLine("\n FINALNIE CZAS NA ROZLOSOWANIE CELÓW, czyli to co tygryski lubią najbardziej xD\n");
             
-            foreach(var pair in randomizedOutput)
-            {
-                Console.WriteLine($"Karta: {pair.skillCard.Name,20} => [cel: {pair.skillCard.TargetsType,5}] {pair.target.Name,-15}");
-            }
+            //////foreach(var pair in randomizedOutput)
+            //////{
+                //////Console.WriteLine($"Karta: {pair.skillCard.Name,20} => [cel: {pair.skillCard.TargetsType,5}] {pair.target.Name,-15}");
+            //////}
             return randomizedOutput;
         }
 
