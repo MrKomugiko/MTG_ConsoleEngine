@@ -23,32 +23,13 @@ namespace MTG_ConsoleEngine
             Players[1]._gameEngine = this;
         }
 
-        public override void Start()
-        {
-            #region StartNewGame
-            CurrentPhase = PhaseType.StartNewGame;
-            ShuffleDeck(Players[0]);
-            ShuffleDeck(Players[1]);
 
-            for (int i = 0; i < 7; i++)
-            {
-                Players[0].DrawCard();
-                Players[1].DrawCard();
-            }
-
-            TurnCounter = 0;
-            CurrentPlayerIndex = 0;
-
-            #endregion
-
-            bool gameEnded = false;
-            RunGameLoop(ref gameEnded);
-        }
         public override void RunGameLoop(ref bool gameEnded)
         {
             int gamephaselenght = GamePhases.Count;
             while (true)
             {
+                // Console.WriteLine("Turn number: "+TurnCounter);
                 for (int i = 0; i < gamephaselenght; i++)
                 {
                     if (Players[CurrentPlayerIndex].Health <= 0)
@@ -72,7 +53,7 @@ namespace MTG_ConsoleEngine
             _player.CombatField.ForEach(card => card.IsTapped = false);
             _player.ManaField.ForEach(card => card.IsTapped = false);
 
-            _player.SumAvailableManaFromManaField(); // reset cached at start new turn
+            _player.RefreshManaStatus(); // reset cached at start new turn
             if (TurnCounter >= 2)
             {
                 _player.DrawCard();
@@ -89,158 +70,91 @@ namespace MTG_ConsoleEngine
 
             #endregion
         }
-    public override void Combat_Phase(PlayerBase _player)
-    {
-        #region Combat_Phase_Begining
-        CurrentPhase = PhaseType.Combat_Phase_Begining;
-        #endregion
+        public override void Combat_Phase(PlayerBase _player)
+        {
+            #region Combat_Phase_Begining
+            CurrentPhase = PhaseType.Combat_Phase_Begining;
+            #endregion
 
-        #region Combat_Phase_AttackersDeclaration
-        CurrentPhase = PhaseType.Combat_Phase_AttackersDeclaration;
+            #region Combat_Phase_AttackersDeclaration
+            CurrentPhase = PhaseType.Combat_Phase_AttackersDeclaration;
 
             DeclaredAttackers = ((PlayerAI)_player).AI_RandomAttackDeclaration();
         
    
-        #endregion
+            #endregion
 
-        #region Combat_Phase_DeffendersDeclaration
-        CurrentPhase = PhaseType.Combat_Phase_DefendersDeclaration;
-        if (DeclaredAttackers.Length > 0)
-        {
-            DeclaredDeffenders = ((PlayerAI)_player.Opponent).AI_RandomDeffendersDeclaration();
-        }
+            #region Combat_Phase_DeffendersDeclaration
+            CurrentPhase = PhaseType.Combat_Phase_DefendersDeclaration;
+            if (DeclaredAttackers.Length > 0)
+            {
+                DeclaredDeffenders = ((PlayerAI)_player.Opponent).AI_RandomDeffendersDeclaration();
+            }
    
-        #endregion
+            #endregion
 
-        #region Combat_Phase_AttackerInstants
-        CurrentPhase = PhaseType.Combat_Phase_AttackerInstants;
+            #region Combat_Phase_AttackerInstants
+            CurrentPhase = PhaseType.Combat_Phase_AttackerInstants;
 
             ((PlayerAI)_player).AI_PlayRandomInstatFromHand();
 
-        #endregion
+            #endregion
 
-        #region Combat_Phase_DeffenderInstants
-        CurrentPhase = PhaseType.Combat_Phase_DeffenderInstants;
+            #region Combat_Phase_DeffenderInstants
+            CurrentPhase = PhaseType.Combat_Phase_DeffenderInstants;
 
-        ((PlayerAI)_player.Opponent).AI_PlayRandomInstatFromHand();
+            ((PlayerAI)_player.Opponent).AI_PlayRandomInstatFromHand();
 
-        #endregion
+            #endregion
 
-        #region Combat_Phase_Combat
-        CurrentPhase = PhaseType.Combat_Phase_Combat;
-        ExecuteCombat();
-
-        Array.Clear(DeclaredAttackers);
-        DeclaredDeffenders.Clear();
-
-        // ewentualne wyłączenie enczantow podczas fazy końca combatu
-
-        MoveDeadCreaturesToGraveyard(_player.Opponent);
-        MoveDeadCreaturesToGraveyard(_player);
-        #endregion
-
-        #region Combat_Phase_End of Combat
-        CurrentPhase = PhaseType.Combat_Phase_End;
-        #endregion
-    }
-    public override void Second_Main_Phase(PlayerBase _player)
-    {
-        #region Second_Main_Phase
-        CurrentPhase = PhaseType.Second_Main_Phase;
-
-        //Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
-
-        ((PlayerAI)_player).AI_MakePlaysWithRandomCardFromHand();
-      
-        #endregion
-    }
-    public override void End_Phase(PlayerBase _player)
-    {
-        #region End_Phase
-        CurrentPhase = PhaseType.End_Phase;
-
-        _player.IsLandPlayedThisTurn = false;
-
-        RecoverHealthSurvivedCreatures();
-      
-        HandCardsCleanUpCountChecker(Players[_player.PlayerNumberID == 1 ? 1 : 0]);
-        #endregion
-    }
+            #region Combat_Phase_Combat
+            CurrentPhase = PhaseType.Combat_Phase_Combat;
+            ExecuteCombat();
 
 
-    public override List<CardBase> GetValidTargetsForCardType(CardBase card, int playerID = 0)
-    {
-        if (card is Instant instant)
-        {
-            List<CardBase> targets = new();
-            List<CardBase> playerA = new();
-            List<CardBase> playerB = new();
+            Array.Clear(DeclaredAttackers);
+            DeclaredDeffenders.Clear();
+            MoveDeadCreaturesToGraveyard(_player.Opponent);
+            MoveDeadCreaturesToGraveyard(_player);
+            #endregion
 
-            if (playerID == 0)
-            {
-                playerA = Players[0].CombatField.Where(x => x is Creature).ToList();
-                playerB = Players[1].CombatField.Where(x => x is Creature).ToList();
-            }
-            else
-            {
-                playerA = Players[1].CombatField.Where(x => x is Creature).ToList();
-                playerB = Players[0].CombatField.Where(x => x is Creature).ToList();
-            }
-
-            if (card.TargetsType == TargetType.Ally)
-            {
-                targets.AddRange(playerA);
-            }else if(card.TargetsType == TargetType.Enemy)
-            {
-                targets.AddRange(playerB);
-            }else if (card.TargetsType == TargetType.Both)
-            {
-                targets.AddRange(playerA);
-                targets.AddRange(playerB);
-            }
-
-            return targets;
+            #region Combat_Phase_End of Combat
+            CurrentPhase = PhaseType.Combat_Phase_End;
+            #endregion
         }
-        if (card is Enchantment enchantment)
+        public override void Second_Main_Phase(PlayerBase _player)
         {
-            List<CardBase> targets = new();
-            List<CardBase> playerA = new();
-            List<CardBase> playerB = new();
+            #region Second_Main_Phase
+            CurrentPhase = PhaseType.Second_Main_Phase;
 
-            if (playerID == 0)
-            {
-                playerA = Players[0].CombatField.Where(x => x is Creature).ToList();
-                playerB = Players[1].CombatField.Where(x => x is Creature).ToList();
-            }
-            else
-            {
-                playerA = Players[1].CombatField.Where(x => x is Creature).ToList();
-                playerB = Players[0].CombatField.Where(x => x is Creature).ToList();
-            }
+            //Console.WriteLine("Second_Main_Phase: Player "+_player.ID);
 
-            if (card.TargetsType == TargetType.Ally)
-            {
-                targets.AddRange(playerA);
-            }
-            else if (card.TargetsType == TargetType.Enemy)
-            {
-                targets.AddRange(playerB);
-            }
-            else if (card.TargetsType == TargetType.Both)
-            {
-                targets.AddRange(playerA);
-                targets.AddRange(playerB);
-            }
+            ((PlayerAI)_player).AI_MakePlaysWithRandomCardFromHand();
+      
+            #endregion
+        }
+        public override void End_Phase(PlayerBase _player)
+        {
+            #region End_Phase
+            CurrentPhase = PhaseType.End_Phase;
 
-            return targets;
+            _player.IsLandPlayedThisTurn = false;
+
+            RecoverHealthSurvivedCreatures();
+      
+            HandCardsCleanUpCountChecker(Players[_player.PlayerNumberID == 1 ? 1 : 0]);
+            #endregion
         }
 
-        return new();
-    }
 
-
-    protected override void ExecuteCombat()
+        protected override void ExecuteCombat()
     {
+        if(DeclaredDeffenders.Count > 0)
+        {
+           ///* DEBUG INFO */ Console.WriteLine();
+           ///* DEBUG INFO */ Console.WriteLine("---------------------------------------------------------------------------------------------------------------");
+           ///* DEBUG INFO */ Console.WriteLine("---------------------------------------------- Combat notes: --------------------------------------------------");
+        }
         foreach (var attacker in DeclaredAttackers) /* <DEFFENDER, ATTACKER> */
         {
             if (DeclaredDeffenders.Any(x => x.Value == attacker))
@@ -249,6 +163,8 @@ namespace MTG_ConsoleEngine
 
                 foreach (var defender in DeclaredDeffenders.Where(x => x.Value == attacker))
                 {
+                   ///* DEBUG INFO */Console.WriteLine($"(owner: player {attacker.Owner.PlayerNumberID}) " + $"{attacker.Name} ({attacker.CurrentAttack}/{attacker.CurrentHealth}) " + $"Vs (owner: player {defender.Key.Owner.PlayerNumberID}) " + $"{defender.Key.Name} ({defender.Key.CurrentAttack}/{defender.Key.CurrentHealth})");
+
                     if (defender.Key.CurrentHealth <= 0) continue;
 
                     attacker.Attack(defender.Key);
@@ -256,46 +172,19 @@ namespace MTG_ConsoleEngine
             }
             attacker.Attack(_defender: null);
         }
-    }
-    protected override void HandCardsCleanUpCountChecker(PlayerBase _player)
-    {
-        if (TurnCounter < 2) return;
-
-        while (_player.Hand.Count >= 7)
+        if (DeclaredDeffenders.Count > 0)
         {
-                ((PlayerAI)_player).AI_RemoveOneCardFromHand();
+           ///* DEBUG INFO */ Console.WriteLine("---------------------------------------------------------------------------------------------------------------");
         }
     }
-
-    protected override void MoveDeadCreaturesToGraveyard(PlayerBase _player)
-    {
-        var DeadCreatures = _player.CombatField.Where(c => ((Creature)c).CurrentHealth <= 0).ToList();
-        _player.Graveyard.AddRange(DeadCreatures);
-        for (int i = 0; i < DeadCreatures.Count; i++)
+        protected override void HandCardsCleanUpCountChecker(PlayerBase _player)
         {
-            var corpse = DeadCreatures[i];
-            _player.CombatField.Remove(corpse);
-            //Console.WriteLine($"send {corpse.Name} to Graveyard...");
-            corpse.Owner.CombatField.Remove(corpse);
-            
-            corpse.Owner.Graveyard.Add(corpse);
-            if (corpse is Creature c)
+            if (TurnCounter < 2) return;
+
+            while (_player.Hand.Count >= 7)
             {
-                c.CurrentHealth = c.BaseHealth;
-                c.CurrentAttack = c.BaseAttack;
+                ((PlayerAI)_player).AI_RemoveOneCardFromHand();
             }
         }
     }
-    protected override void ShuffleDeck(PlayerBase deckOwner)
-    {
-        var rand = new Random();
-        for (var i = deckOwner.Deck.Count - 1; i > 0; i--)
-        {
-            var temp = deckOwner.Deck[i];
-            var index = rand.Next(0, i + 1);
-            deckOwner.Deck[i] = deckOwner.Deck[index];
-            deckOwner.Deck[index] = temp;
-        }
-    }
-}
 }

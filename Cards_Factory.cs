@@ -8,7 +8,7 @@ namespace MTG_ConsoleEngine
         {
             return new Creature
             (
-                _manaCost: new Dictionary<int, int>() { { 0, 1 }, { 1, 1 } },
+                _manaCost: new int[] { 1, 1, 0, 0, 0, 0 },
                 _identificator: "128_M21",
                 _name: "Walking Corpse",
                 _category: "Zombie",
@@ -21,7 +21,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<int, int>() { { 0, 3 }, { 1, 1 } },
+                _manaCost: new int[] { 3, 1, 0, 0, 0, 0 },
                 _identificator: "101_M19",
                 _name: "Infectious Horror",
                 _category: "Zombie",
@@ -36,7 +36,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<int, int>() { { 1, 1 } },
+                _manaCost: new int[] { 0, 1, 0, 0, 0, 0 },
                 _identificator: "077_WAR",
                 _name: "Banehound",
                 _category: "Nightmare Hound",
@@ -51,7 +51,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<int, int>() { { 0,4 },{ 1, 1 } },
+                _manaCost: new int[] { 4, 1, 0, 0, 0, 0 },
                 _identificator: "095_M19",
                 _name: "Epicure of Blood",
                 _category: "Vampire",
@@ -67,7 +67,7 @@ namespace MTG_ConsoleEngine
         {
             var creature = new Creature
             (
-                _manaCost: new Dictionary<int, int>() { { 0, 4 }, { 1, 1 } },
+                _manaCost: new int[] { 4, 1, 0, 0, 0, 0 },
                 _identificator: "096_M19",
                 _name: "Fell Specter",
                 _category: "Specter",
@@ -146,7 +146,7 @@ namespace MTG_ConsoleEngine
         {
             var enchantment = new Enchantment
             (
-                _manaCost: new Dictionary<int, int>() {{ 1, 1 } },
+                _manaCost: new int[] { 0, 1, 0, 0, 0, 0 },
                 _identificator: "067_GRN",
                 _name: "Dead Weight",
                 _category: "Aura",
@@ -161,7 +161,7 @@ namespace MTG_ConsoleEngine
         {
             var enchantment = new Enchantment
             (
-                _manaCost: new Dictionary<int, int>() { { 0,1 },{ 1,1 } },
+                _manaCost: new int[] { 1, 1, 0, 0, 0, 0 },
                 _identificator: "105_M21",
                 _name: "Infernal Scarring",
                 _category: "Aura",
@@ -181,7 +181,7 @@ namespace MTG_ConsoleEngine
         {
             var instant = new Instant
             (
-                _manaCost: new Dictionary<int, int>() {{ 1, 2 } },
+                _manaCost: new int[] { 0, 2, 0, 0, 0, 0 },
                 _identificator: "104_WAR",
                 _name: "Sorin's Thirst",
                 _description: "''I see you're out of the wall.'' ~ Nahiri",

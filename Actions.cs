@@ -29,16 +29,15 @@ namespace MTG_ConsoleEngine
         {
             if(target != null)
             {
-            // max wartość któą odzyskaja w nowej turze:
+               ///* DEBUG INFO */ Console.WriteLine($"\t\t{target.Name} po nałożeniu enchantu: atk:{target.CurrentAttack+atk} / hp:{target.CurrentHealth+hp}");
                 target.BaseAttack += atk;
                 target.BaseHealth += hp;
-                
-                //Console.WriteLine($"{target.Name} po nałożeniu enchantu: atk:{target.CurrentAttack} / hp:{target.CurrentHealth}");
+
             }
         }
         public static void DamageSelectedCreature(int value, Creature target)
         {
-            //Console.WriteLine($"Damage {target.Name} with {value} damage");
+           ///* DEBUG INFO */ Console.WriteLine($"\t\t{target.Name} po otrzymaniu {value} dmg   atk:{target.CurrentAttack} / hp:{target.CurrentHealth - value}");
             target.CurrentHealth -= value;
         }
     }

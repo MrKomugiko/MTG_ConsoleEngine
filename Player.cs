@@ -199,6 +199,7 @@ namespace MTG_ConsoleEngine
                         
                         if(playerResponse.status == true) {
                             e.AssingToCreature((Creature)(_gameEngine.Players[playerResponse.playerIndex].CombatField[playerResponse.creatureIndex]));
+                            e.UseSpecialAction(ActionType.OnEnnchantAdded);
                         }
                         else {
                             Console.WriteLine("anuluj, skip");
@@ -248,7 +249,7 @@ namespace MTG_ConsoleEngine
         public Dictionary<int,(bool result,List<CardBase> landsToTap)> Get_and_DisplayPlayerHand()
         {
             SumAvailableManaFromManaField();
-            Dictionary<int, int> currentMana = _currentTotalManaStatus;
+            int[] currentMana = _currentTotalManaStatus;
 
             TableHelpers.DisplayHandTable(color, currentMana, PlayerNumberID, Health, Hand);
 

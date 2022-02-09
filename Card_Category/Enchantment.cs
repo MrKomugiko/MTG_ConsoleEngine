@@ -7,7 +7,7 @@ namespace MTG_ConsoleEngine.Card_Category
         public string UseOn { get; private set;} = "";
         public CardBase? AssignedToCard = null;
 
-        public Enchantment(Dictionary<int, int> _manaCost, string _identificator, string _name, string _description, string _category, EngineBase.TargetType _mainTarget) : 
+        public Enchantment(int[] _manaCost, string _identificator, string _name, string _description, string _category, EngineBase.TargetType _mainTarget) : 
             base(_manaCost, _identificator, _name, _description, "Enchantment")
         {
             this.Category = _category;
@@ -59,17 +59,14 @@ namespace MTG_ConsoleEngine.Card_Category
             // parowanie kart
             target.EnchantmentSlots.Add(this); // 1 karta moze miec kilka enchantów na sobie
             this.AssignedToCard = target; // 1 enchant tylko na 1 karte
-            Console.WriteLine($"Enchantment [{this.Name}] został nałożony na karte [{target.Name}]");
-            
-            UseSpecialAction(ActionType.OnEnnchantAdded);
         }
         public override void UseSpecialAction(ActionType trigger)
         {
             if(CardSpecialActions.Count > 0)
             {
-                Console.WriteLine("Action/s Triggered!");
                 foreach(var actions in CardSpecialActions.Where(x=>x.trigger == trigger))
-                {   
+                {
+                   ///* DEBUG INFO */ Console.WriteLine("\tAction/s Triggered! ~ "+actions.description);
                     actions.action();
                 }
             }

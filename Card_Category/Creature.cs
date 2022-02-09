@@ -4,7 +4,7 @@ namespace MTG_ConsoleEngine.Card_Category
     {
         private readonly int CoreHealth; // orginalnie, bez zanych boostów
         private readonly int CoreAttack; // orginalnie, bez zanych boostów
-
+        private bool isDead = false;
         public int BaseHealth { 
             get => _baseHealth; 
             set {
@@ -27,20 +27,22 @@ namespace MTG_ConsoleEngine.Card_Category
         public int CurrentHealth { 
             get => _currentHealth; 
             set {
-                if(value <= 0)
+                if(value <= 0 && isDead == false)
                 {
-                    _currentHealth = 0; 
+                    isDead = true;
+                    _currentHealth = 0;
 
-                   // Console.WriteLine($"{Name} died...");
+                   ///* DEBUG INFO */ Console.WriteLine($"\t\tCreature: {Name} died... [owner: player {Owner.PlayerNumberID}]");
 
-                    // sprawdzenie czy ma na sobie enchantmenty
-                    if(EnchantmentSlots.Count > 0)
+                    if (EnchantmentSlots.Count > 0)
                     {
-                        // wykoananie na kazdym akcji on creature die
-                        EnchantmentSlots.ForEach(ench=>ench.UseSpecialAction(ActionType.CreatureDied));
-                        // wurzucenie zużytych enczantow do graveyards
+                        
+                        EnchantmentSlots.ForEach(ench=>
+                        {
+                            ench.UseSpecialAction(ActionType.CreatureDied);
+                        });
+                        
                         EnchantmentSlots.ForEach(ench=>Owner.Graveyard.Add(ench));
-                        // usunięcie wszystkich enczantów z karty po jej smierci
                         EnchantmentSlots.Clear();
                     }                
                 }
@@ -61,14 +63,12 @@ namespace MTG_ConsoleEngine.Card_Category
             }
         }
         public List<string> Perks { get; internal set; } = new List<string>();
-
         private int _currentHealth;
         public List<Enchantment> EnchantmentSlots = new();
         private bool _isTapped;
         private int _baseHealth;
         private int _baseAttack;
-
-        public Creature(Dictionary<int, int> _manaCost, string _identificator,string _name, string _category, string _description, int _health, int _attack)
+        public Creature(int[] _manaCost, string _identificator,string _name, string _category, string _description, int _health, int _attack)
             : base(_manaCost, _identificator, _name, _description, "Creature")
         {
             this.BaseHealth = _health;
@@ -138,9 +138,9 @@ namespace MTG_ConsoleEngine.Card_Category
         {
             if (CardSpecialActions.Any())
             {
-                //Console.WriteLine("Action/s Triggered!");
                 foreach (var (trigger, description, action) in CardSpecialActions.Where(x => x.trigger == actionType))
                 {
+                   ///* DEBUG INFO */ Console.WriteLine($"\tAction/s Triggered! ~ {description}");
                     action();
                 }
             }
@@ -153,20 +153,17 @@ namespace MTG_ConsoleEngine.Card_Category
         }
         public void Attack(Creature? _defender)
         {
-            // attacker ktory nie ma życia nie moze zaatakowac xd ( np wczesniej po potraktowaniu instantem)
             if (CurrentHealth <= 0) 
             {
-               // Console.WriteLine($"Jednostka atakujaca {(this.Name)} już nie żyje, atak nie zostaje wyprowadzony. next");
                 return; 
             }
-           // Console.ForegroundColor = ConsoleColor.DarkGreen;
-            //Console.WriteLine($"Player {Owner.PlayerNumberID} Atakuje kartą {this.Name}");
-           // Console.ResetColor();
+
+           ///* DEBUG INFO */Console.WriteLine($"[Player {Owner.PlayerNumberID}] Atakuje kartą {this.Name}");
+
             if (_defender != null)
             {
                 if (_defender.CurrentHealth <= 0) 
                 {
-                   // Console.WriteLine($"Przeciwnik {(_defender.Name)} już nie żyje, atak nie obrona nie zostałą przeprowadzona przez nią.");
                     return; 
                 }
                 this.CurrentHealth -= _defender.CurrentAttack;
@@ -176,14 +173,12 @@ namespace MTG_ConsoleEngine.Card_Category
             }
             else
             {
-               // Console.WriteLine("Atak nie napotkał obrony, atak w Przeciwnika (Player'a)");
                 Owner.Opponent.DealDamage(this.CurrentAttack);
             }
 
             UseSpecialAction(ActionType.Attack);
             IsTapped = true;
         }
-
         public void ResetStatsAfterFight()
         {
             CurrentHealth = BaseHealth;
@@ -193,6 +188,7 @@ namespace MTG_ConsoleEngine.Card_Category
         {
             CurrentHealth = CoreHealth;
             CurrentAttack = CoreAttack;
+            isDead = false;
         }
     }
 }

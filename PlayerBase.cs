@@ -76,26 +76,10 @@ namespace MTG_ConsoleEngine
             }
         }
 
-        protected Dictionary<int, int> _currentTotalManaStatus = new Dictionary<int, int>()
-                {
-                    {0,0 },
-                    {1,0 },
-                    {2,0 },
-                    {3,0 },
-                    {4,0 },
-                    {5,0 }
-                };
+        protected int[] _currentTotalManaStatus = new int[6];
 
-        public Dictionary<int, int> CurrentTotalManaStatus { get => _currentTotalManaStatus; }
-        public Dictionary<int, int> manadiff { get; set; } = new Dictionary<int, int>()
-            {
-                { 0, 0},
-                { 1, 0},
-                { 2, 0},
-                { 3, 0},
-                { 4, 0},
-                { 5, 0}
-            };
+        public int[] CurrentTotalManaStatus { get => _currentTotalManaStatus; }
+        
         public void RefreshManaStatus()
         {
           SumAvailableManaFromManaField();
@@ -117,12 +101,7 @@ namespace MTG_ConsoleEngine
             //sumowanie dostepnej many
             foreach (Land manaCard in ManaField.Where(c=> c.IsTapped == false))
             {
-                _currentTotalManaStatus[0] += manaCard.manaValue[0];
-                _currentTotalManaStatus[1] += manaCard.manaValue[1];
-                _currentTotalManaStatus[2] += manaCard.manaValue[2];
-                _currentTotalManaStatus[3] += manaCard.manaValue[3];
-                _currentTotalManaStatus[4] += manaCard.manaValue[4];
-                _currentTotalManaStatus[5] += manaCard.manaValue[5];
+                _currentTotalManaStatus[manaCard.manaValue.codeIndex] += manaCard.manaValue.value;
             }
         }    
         public void AddToDeck(CardBase _card)
@@ -158,7 +137,7 @@ namespace MTG_ConsoleEngine
                     itemsLeft[index++] = temp[i];
                 }
 
-                var skillsToSum = new List<Dictionary<int, int>>();
+                var skillsToSum = new List<int[]>();
                 for (int i = 0; i < newParentState.Length; i++)
                 {
                     skillsToSum.Add(_playableCardsFromHand.First(x => x.ID == newParentState[i]).ManaCost);
@@ -173,23 +152,25 @@ namespace MTG_ConsoleEngine
                 RecurPowerSet(ref _OUTPUT, newParentState, itemsLeft, _playableCardsFromHand);
             }
         }
-        protected int[] SimpleSumMana(List<Dictionary<int, int>> cardsToSum)
+        public int[] SimpleSumMana(List<int[]> cardsToSum)
         {
             int[] sumData = new int[6];
             for (int i = 0; i < cardsToSum.Count; i++)
             {
-                foreach (var m in cardsToSum[i])
-                {
-                    sumData[m.Key] += m.Value;
-                }
+                sumData[0] += cardsToSum[i][0];
+                sumData[1] += cardsToSum[i][1];
+                sumData[2] += cardsToSum[i][2];
+                sumData[3] += cardsToSum[i][3];
+                sumData[4] += cardsToSum[i][4];
+                sumData[5] += cardsToSum[i][5];
             }
             return sumData;
         }
 
-        protected bool SimpleManaCheck(int[] totalCost)
+        public  bool SimpleManaCheck(int[] totalCost)
         {
             // sprawdzenie różnic pomiędzy "core colorami
-
+            int[] manadiff = new int[6];
             manadiff[0] = CurrentTotalManaStatus[0] - totalCost[0];
             manadiff[1] = CurrentTotalManaStatus[1] - totalCost[1];
             manadiff[2] = CurrentTotalManaStatus[2] - totalCost[2];

@@ -191,15 +191,15 @@ namespace MTG_ConsoleEngine
                 Console.Write($"  ║  {tappedValue.PadLeft(6)}   ║ {creature.Name.PadLeft(21)} ║ {statsValue} ║ {alertInfo.PadLeft(19)} ║\n");
             }
         }
-        internal static void DisplayHandTable(ConsoleColor _color, Dictionary<int,int> _currentManaDict, int _playerNumberID, int _playerHEalth, List<CardBase> _hand )
+        internal static void DisplayHandTable(ConsoleColor _color, int[] _currentManaArr, int _playerNumberID, int _playerHEalth, List<CardBase> _hand )
         {
             Console.ForegroundColor = _color;
-            string manaString = $"{(_currentManaDict[0] == 0 ? "" : $"[ ] {_currentManaDict[0]}, ")}";
-            manaString += $"{(_currentManaDict[1] == 0 ? "" : $"[B] {_currentManaDict[1]}, ")}";
-            manaString += $"{(_currentManaDict[2] == 0 ? "" : $"[W] {_currentManaDict[2]}, ")}";
-            manaString += $"{(_currentManaDict[3] == 0 ? "" : $"[R] {_currentManaDict[3]}, ")}";
-            manaString += $"{(_currentManaDict[4] == 0 ? "" : $"[G] {_currentManaDict[4]}, ")}";
-            manaString += $"{(_currentManaDict[5] == 0 ? "" : $"[U] {_currentManaDict[5]}")}";
+            string manaString = $"{(_currentManaArr[0] == 0 ? "" : $"[ ] {_currentManaArr[0]}, ")}";
+            manaString += $"{(_currentManaArr[1] == 0 ? "" : $"[B] {_currentManaArr[1]}, ")}";
+            manaString += $"{(_currentManaArr[2] == 0 ? "" : $"[W] {_currentManaArr[2]}, ")}";
+            manaString += $"{(_currentManaArr[3] == 0 ? "" : $"[R] {_currentManaArr[3]}, ")}";
+            manaString += $"{(_currentManaArr[4] == 0 ? "" : $"[G] {_currentManaArr[4]}, ")}";
+            manaString += $"{(_currentManaArr[5] == 0 ? "" : $"[U] {_currentManaArr[5]}")}";
 
             string myavailableMana = manaString;
        

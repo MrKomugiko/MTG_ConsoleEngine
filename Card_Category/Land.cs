@@ -22,18 +22,10 @@ namespace MTG_ConsoleEngine.Card_Category
             5   ->   Blue
 
          */
-        public int manaCode = 0;
-        public Dictionary<int, int> manaValue = new(1)
-        {
-            {0, 0},
-            {1, 0},
-            {2, 0},
-            {3, 0},
-            {4, 0},
-            {5, 0}
-        };
+        public (int codeIndex, int value) manaValue = new();
+
         public Land(string _identificator, string _name) 
-            : base(new(), _identificator, _name,"", "Land")
+            : base(new int[6], _identificator, _name,"", "Land")
         {
             // create land card
             base.TargetsType = EngineBase.TargetType.None;
@@ -46,12 +38,12 @@ namespace MTG_ConsoleEngine.Card_Category
                 var value = _specialActionInfo.Replace("Add", "").Replace("mana", "").Trim().Split(" ");
                 switch(value[1])
                 {
-                    default:        manaValue[0] =  1;                                     manaCode = 0; break;
-                    case "Black":   manaValue[1] = Int32.Parse(value[0]);                  manaCode = 1; break;
-                    case "White":   manaValue[2] = Int32.Parse(value[0]);                  manaCode = 2; break;
-                    case "Red":     manaValue[3] = Int32.Parse(value[0]);                  manaCode = 3; break;
-                    case "Green":   manaValue[4] = Int32.Parse(value[0]);                  manaCode = 4; break;
-                    case "Blue":    manaValue[5] = Int32.Parse(value[0]);                  manaCode = 5; break;
+                    default:        manaValue = (0, 1); break;
+                    case "Black":   manaValue = (1, Int32.Parse(value[0])); break;
+                    case "White":   manaValue = (2, Int32.Parse(value[0])); break;
+                    case "Red":     manaValue = (3, Int32.Parse(value[0])); break;
+                    case "Green":   manaValue = (4, Int32.Parse(value[0])); break;
+                    case "Blue":    manaValue = (5, Int32.Parse(value[0])); break;
                 };
 
                 CardSpecialActions.Add

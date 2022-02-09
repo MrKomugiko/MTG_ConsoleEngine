@@ -2,7 +2,7 @@ namespace MTG_ConsoleEngine.Card_Category
 {
     public class Instant : CardBase
     {
-        public Instant(Dictionary<int, int> _manaCost, string _identificator, string _name, string _description, EngineBase.TargetType _mainTarget) 
+        public Instant(int[] _manaCost, string _identificator, string _name, string _description, EngineBase.TargetType _mainTarget) 
             : base(_manaCost, _identificator, _name, _description, "Instant")
         {
             base.TargetsType = _mainTarget;
@@ -53,9 +53,9 @@ namespace MTG_ConsoleEngine.Card_Category
         {
             if(CardSpecialActions.Count > 0)
             {
-                Console.WriteLine("Action/s Triggered!");
                 foreach(var actions in CardSpecialActions.Where(x=>x.trigger == trigger))
-                {   
+                {
+                   ///* DEBUG INFO */ Console.WriteLine("\tAction/s Triggered! ~ " + actions.description);
                     actions.action();
                 }
             }

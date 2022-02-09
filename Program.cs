@@ -1,7 +1,4 @@
 ﻿using MTG_ConsoleEngine;
-using System.Diagnostics;
-
-//Console.WriteLine("MTG Game Engine");
 
 //PlayerAI Player1 = new PlayerAI(1, 20);
 //Player Player2 = new Player(2, 20);
@@ -24,7 +21,7 @@ using System.Diagnostics;
 //    Player1.AddToDeck(Land_Factory.Get_Swamp());
 //});
 //int CardID = 0;
-//Player1.Deck.ForEach(x=>x.ID = CardID++);
+//Player1.Deck.ForEach(x => x.ID = CardID++);
 
 //Enumerable.Range(0, 4).ToList().ForEach(x =>
 //{
@@ -53,30 +50,34 @@ using System.Diagnostics;
 
 List<CardBase> TEST_DECK = new();
 
-Enumerable.Range(0, 4).ToList().ForEach(x => {
-    TEST_DECK.Add(Creature_Factory.Get_Banehound());
-    TEST_DECK.Add(Creature_Factory.Get_WalkingCorpse());
-    TEST_DECK.Add(Creature_Factory.Get_InfectiousHorror());
-    TEST_DECK.Add(Enchantment_Factory.Get_DeadWeight());
-    TEST_DECK.Add(Enchantment_Factory.Get_InfernalScarring());
-    TEST_DECK.Add(Instant_Factory.Get_SorinsThirst());
+Enumerable.Range(0, 4).ToList().ForEach(x =>
+{
+TEST_DECK.Add(Creature_Factory.Get_Banehound());
+TEST_DECK.Add(Creature_Factory.Get_WalkingCorpse());
+TEST_DECK.Add(Creature_Factory.Get_InfectiousHorror());
+TEST_DECK.Add(Enchantment_Factory.Get_DeadWeight());
+TEST_DECK.Add(Enchantment_Factory.Get_InfernalScarring());
+TEST_DECK.Add(Instant_Factory.Get_SorinsThirst());
 });
-Enumerable.Range(0, 14).ToList().ForEach(x => {
-    TEST_DECK.Add(Land_Factory.Get_Swamp());
+Enumerable.Range(0, 14).ToList().ForEach(x =>
+{
+TEST_DECK.Add(Land_Factory.Get_Swamp());
 });
 
 List<CardBase> TEST_DECK_2 = new();
 
-Enumerable.Range(0, 4).ToList().ForEach(x => {
-    TEST_DECK_2.Add(Creature_Factory.Get_Banehound());
-    TEST_DECK_2.Add(Creature_Factory.Get_WalkingCorpse());
-    TEST_DECK_2.Add(Creature_Factory.Get_InfectiousHorror());
-    TEST_DECK_2.Add(Enchantment_Factory.Get_DeadWeight());
-    TEST_DECK_2.Add(Enchantment_Factory.Get_InfernalScarring());
-    TEST_DECK_2.Add(Instant_Factory.Get_SorinsThirst());
+Enumerable.Range(0, 4).ToList().ForEach(x =>
+{
+TEST_DECK_2.Add(Creature_Factory.Get_Banehound());
+TEST_DECK_2.Add(Creature_Factory.Get_WalkingCorpse());
+TEST_DECK_2.Add(Creature_Factory.Get_InfectiousHorror());
+TEST_DECK_2.Add(Enchantment_Factory.Get_DeadWeight());
+TEST_DECK_2.Add(Enchantment_Factory.Get_InfernalScarring());
+TEST_DECK_2.Add(Instant_Factory.Get_SorinsThirst());
 });
-Enumerable.Range(0, 14).ToList().ForEach(x => {
-    TEST_DECK_2.Add(Land_Factory.Get_Swamp());
+Enumerable.Range(0, 14).ToList().ForEach(x =>
+{
+TEST_DECK_2.Add(Land_Factory.Get_Swamp());
 });
 
 int CardID = 0;
@@ -85,7 +86,7 @@ CardID = 0;
 TEST_DECK.ForEach(x => x.ID = CardID++);
 
 
-for (int i = 0; i < 1_000; i++)
+for (int i = 0; i < 500_000; i++)
 {
     PlayerAI Player1 = new(1, 20);
     PlayerAI Player2 = new(2, 20);
@@ -121,6 +122,6 @@ for (int i = 0; i < 1_000; i++)
     //Console.WriteLine();
 }
 
-//Console.WriteLine("Stop");
+Console.WriteLine("Stop");
 
 
